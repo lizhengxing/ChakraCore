@@ -14,6 +14,7 @@ namespace Wasm
         const int8 i64 = 0x80 - 0x2;
         const int8 f32 = 0x80 - 0x3;
         const int8 f64 = 0x80 - 0x4;
+        const int8 m128 = 0x80 - 0x5;
         const int8 anyfunc = 0x80 - 0x10;
         const int8 func = 0x80 - 0x20;
         const int8 emptyBlock = 0x80 - 0x40;
@@ -54,6 +55,7 @@ namespace Wasm
         bool ProcessCurrentSection();
         virtual void SeekToFunctionBody(class WasmFunctionInfo* funcInfo) override;
         virtual bool IsCurrentFunctionCompleted() const override;
+
         virtual WasmOp ReadExpr() override;
         virtual void FunctionEnd() override;
 #if DBG_DUMP
@@ -77,6 +79,8 @@ namespace Wasm
         void BrNode();
         void BrTableNode();
         void MemNode();
+        void LaneNode();
+        void ShuffleNode();
         void VarNode();
 
         // Module readers
