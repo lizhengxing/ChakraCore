@@ -14,7 +14,7 @@
 #include "Language/InterpreterStackFrame.h"
 #include "Library/JavascriptGeneratorFunction.h"
 #include "Library/ForInObjectEnumerator.h"
-
+#include "../../WasmReader/WasmParseTree.h"
 ///----------------------------------------------------------------------------
 ///
 /// macros PROCESS_INtoOUT
@@ -2074,6 +2074,15 @@ namespace Js
                 break;
             }
 #endif
+
+#ifdef ENABLE_WASM_SIMD
+            if (function->GetScriptContext()->GetConfig()->IsWasmSimdEnabled())
+            {
+				*(AsmJsSIMDValue*)retDst = asmJsReturn.simd;
+                break;
+            }
+#endif
+
             Assert(UNREACHED);
         // double return
         case AsmJsRetType::Double:
@@ -2256,13 +2265,18 @@ namespace Js
         *(AsmJsSIMDValue*)(&(m_outParams[outRegisterID])) = val;
     }
 
-    template<bool toJs>
+    template<int type, bool toJs>
     void InterpreterStackFrame::OP_InvalidWasmTypeConversion(...)
     {
-        // Right now the only invalid wasm type conversion is with int64
-        const char16* fromType = toJs ? _u("int64") : _u("Javascript Variable");
-        const char16* toType = toJs ? _u("Javascript Variable") : _u("int64");
+#ifdef ENABLE_WASM
+        CompileAssert(type < Wasm::WasmTypes::Limit);
+        const char16* fromType = toJs ? Wasm::WasmTypes::GetStrId(static_cast<Wasm::WasmTypes::WasmType>(type)) : _u("Javascript Variable");
+        const char16* toType = toJs ? _u("Javascript Variable") : Wasm::WasmTypes::GetStrId(static_cast<Wasm::WasmTypes::WasmType>(type));
         JavascriptError::ThrowTypeErrorVar(scriptContext, WASMERR_InvalidTypeConversion, fromType, toType);
+#else
+        Assert(UNREACHED); //shouldn't get there
+        JavascriptError::ThrowTypeErrorVar(scriptContext, WASMERR_InvalidTypeConversion, _u("unknown"), _u("unknown")); //throw for a release build
+#endif
     }
 
     // This will be called in the beginning of the try_finally.
@@ -2984,7 +2998,7 @@ namespace Js
         int64* int64Arg = m_localInt64Slots + info->GetTypedSlotInfo(WAsmJs::INT64)->constCount;
         double* doubleArg = m_localDoubleSlots + info->GetTypedSlotInfo(WAsmJs::FLOAT64)->constCount;
         float* floatArg = m_localFloatSlots + info->GetTypedSlotInfo(WAsmJs::FLOAT32)->constCount;
-#if _M_X64
+#if defined(ENABLE_SIMDJS) || defined(ENABLE_WASM_SIMD)
         AsmJsSIMDValue* simdArg = m_localSimdSlots + info->GetTypedSlotInfo(WAsmJs::SIMD)->constCount;
 #endif
         // Move the arguments to the right location
@@ -3089,13 +3103,24 @@ namespace Js
                 }
                 else
                 {
+#if defined (ENABLE_SIMDJS) || defined(ENABLE_WASM_SIMD)
                     Assert(info->GetArgType(i).isSIMD());
                     *simdArg = *(AsmJsSIMDValue*)floatSpillAddress;
                     ++simdArg;
                     homingAreaSize += sizeof(AsmJsSIMDValue);
+#else
+                    Assert(UNREACHED);
+#endif
                 }
 #ifdef ENABLE_SIMDJS
                 if (scriptContext->GetConfig()->IsSimdjsEnabled() && i == 2) // last argument ?
+#endif
+
+#ifdef ENABLE_WASM_SIMD
+                if (scriptContext->GetConfig()->IsWasmSimdEnabled() && i == 2) // last argument ?
+#endif
+
+#if defined(ENABLE_SIMDJS) || defined(ENABLE_WASM_SIMD)
                 {
                     // If we have simd arguments, the homing area in m_inParams can be larger than 3 64-bit slots. This is because SIMD values are unboxed there too.
                     // After unboxing, the homing area is overwritten by rdx, r8 and r9, and we read/skip 64-bit slots from the homing area (argAddress += MachPtr).
@@ -3161,6 +3186,13 @@ namespace Js
             }
 #ifdef ENABLE_SIMDJS
             else if (scriptContext->GetConfig()->IsSimdjsEnabled() && info->GetArgType(i).isSIMD())
+#endif
+
+#ifdef ENABLE_WASM_SIMD
+            else if (scriptContext->GetConfig()->IsWasmSimdEnabled() && info->GetArgType(i).isSIMD())
+#endif
+
+#if defined(ENABLE_SIMDJS) || defined(ENABLE_WASM_SIMD)
             {
                 *simdArg = *(AsmJsSIMDValue*)argAddress;
                 ++simdArg;
@@ -3760,7 +3792,7 @@ namespace Js
         case AsmJsRetType::Float:
             m_localFloatSlots[returnReg] = JavascriptFunction::CallAsmJsFunction<float>(function, entrypointInfo->jsMethod, m_outParams, alignedArgsSize, reg);
             break;
-#ifdef ENABLE_SIMDJS
+#if defined (ENABLE_SIMDJS) || defined(ENABLE_WASM_SIMD)
         case AsmJsRetType::Float32x4:
         case AsmJsRetType::Int32x4:
         case AsmJsRetType::Bool32x4:
@@ -3785,9 +3817,37 @@ namespace Js
             Assume(UNREACHED);
         }
 
-        const ArgSlot nVarToPop = (asmInfo->GetArgByteSize() / sizeof(Var)) + 1;
-        PopOut(nVarToPop);
+#if defined (ENABLE_SIMDJS) || defined(ENABLE_WASM_SIMD)
+#if _M_X64
 
+#ifdef ENABLE_SIMDJS
+        if (scriptContext->GetConfig()->IsSimdjsEnabled())
+#endif
+
+#ifdef ENABLE_WASM_SIMD
+            if (scriptContext->GetConfig()->IsWasmSimdEnabled())
+#endif
+
+#endif
+            {
+				const ArgSlot nVarToPop = (asmInfo->GetArgByteSize() / sizeof(Var)) + 1;
+                PopOut((ArgSlot)(nVarToPop));
+            }
+#if _M_X64
+            else
+            {
+                PopOut((ArgSlot)asmInfo->GetArgCount() + 1);
+            }
+#endif
+#else
+#if _M_X64
+        PopOut((ArgSlot)asmInfo->GetArgCount() + 1);
+
+#else
+		const ArgSlot nVarToPop = (asmInfo->GetArgByteSize() / sizeof(Var)) + 1;
+		PopOut((ArgSlot)(nVarToPop));
+#endif
+#endif
         Assert(function);
     }
 #endif
@@ -7982,12 +8042,18 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
     void InterpreterStackFrame::OP_SimdLdArrGeneric(const unaligned T* playout)
     {
         Assert(playout->ViewType < Js::ArrayBufferView::TYPE_COUNT);
-        const uint64 index = (uint32)GetRegRawInt(playout->SlotIndex) & ArrayBufferView::ViewMask[playout->ViewType];
-        JavascriptArrayBuffer* arr = GetAsmJsBuffer();
+        const uint64 index = ((uint64)(uint32)GetRegRawInt(playout->SlotIndex) + playout->Offset /* WASM only */) & (int64)(int)ArrayBufferView::ViewMask[playout->ViewType];
+
+        JavascriptArrayBuffer* arr =
+#ifdef ENABLE_WASM_SIMD
+            (m_functionBody->IsWasmFunction()) ?
+                m_wasmMemory->GetBuffer() :
+#endif
+                GetAsmJsBuffer();
+        
         BYTE* buffer = arr->GetBuffer();
         uint8 dataWidth = playout->DataWidth;
         RegSlot dstReg = playout->Value;
-
         if (index + dataWidth > arr->GetByteLength())
         {
             JavascriptError::ThrowRangeError(scriptContext, JSERR_ArgumentOutOfRange, _u("Simd typed array access"));
@@ -8024,8 +8090,15 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
     void InterpreterStackFrame::OP_SimdStArrGeneric(const unaligned T* playout)
     {
         Assert(playout->ViewType < Js::ArrayBufferView::TYPE_COUNT);
-        const uint64 index = (uint32)GetRegRawInt(playout->SlotIndex) & ArrayBufferView::ViewMask[playout->ViewType];
-        JavascriptArrayBuffer* arr = GetAsmJsBuffer();
+        const uint64 index = ((uint64)(uint32)GetRegRawInt(playout->SlotIndex) + playout->Offset /* WASM only */) & (int64)(int)ArrayBufferView::ViewMask[playout->ViewType];
+
+        JavascriptArrayBuffer* arr =
+#ifdef ENABLE_WASM_SIMD
+            (m_functionBody->IsWasmFunction()) ?
+                m_wasmMemory->GetBuffer() :
+#endif
+                GetAsmJsBuffer();
+
         BYTE* buffer = arr->GetBuffer();
         uint8 dataWidth = playout->DataWidth;
         RegSlot srcReg = playout->Value;
@@ -8059,13 +8132,33 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
 
     }
 
+
+    bool InterpreterStackFrame::SIMDAnyNaN(AsmJsSIMDValue& input)
+    {
+        if (!GetFunctionBody()->IsWasmFunction()) 
+        {
+            return false;
+        }
+
+        AsmJsSIMDValue compResult = SIMDFloat32x4Operation::OpEqual(input, input);
+        return !SIMDBool32x4Operation::OpAllTrue(compResult);
+    }
+    
     // handler for SIMD.Int32x4.FromFloat32x4
     template <class T>
     void InterpreterStackFrame::OP_SimdInt32x4FromFloat32x4(const unaligned T* playout)
     {
         bool throws = false;
         AsmJsSIMDValue input = GetRegRawSimd(playout->F4_1);
-        AsmJsSIMDValue result = SIMDInt32x4Operation::OpFromFloat32x4(input, throws);
+        AsmJsSIMDValue result{ 0 };
+
+#ifdef ENABLE_WASM_SIMD
+        throws = SIMDAnyNaN(input);
+        if (!throws)
+#endif
+        {
+            result = SIMDInt32x4Operation::OpFromFloat32x4(input, throws);
+        }
 
         // value is out of bound
         if (throws)
@@ -8080,14 +8173,40 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
     {
         bool throws = false;
         AsmJsSIMDValue input = GetRegRawSimd(playout->F4_1);
-        AsmJsSIMDValue result = SIMDUint32x4Operation::OpFromFloat32x4(input, throws);
+        AsmJsSIMDValue result{ 0 };
 
-        // value is out of bound
+#ifdef ENABLE_WASM_SIMD
+        throws = SIMDAnyNaN(input);
+        if (!throws)
+#endif
+        {
+            result = SIMDUint32x4Operation::OpFromFloat32x4(input, throws);
+        }
+
         if (throws)
         {
             JavascriptError::ThrowRangeError(scriptContext, JSERR_ArgumentOutOfRange, _u("SIMD.Int32x4.FromFloat32x4"));
         }
         SetRegRawSimd(playout->U4_0, result);
+    }
+
+    template <class T>
+    void InterpreterStackFrame::OP_WasmSimdConst(const unaligned T* playout)
+    {
+        AsmJsSIMDValue result{ playout->C1, playout->C2, playout->C3, playout->C4 };
+        SetRegRawSimd(playout->F4_0, result);
+    }
+    
+    template <class T>
+    void InterpreterStackFrame::OP_SimdShuffleV8X16(const unaligned T* playout)
+    {
+        uint32 lanes[Wasm::Simd::MAX_LANES];
+        for (uint32 i = 0; i < Wasm::Simd::MAX_LANES; i++)
+        {
+            Assert(playout->INDICES[i] < Wasm::Simd::MAX_LANES * 2);
+            lanes[i] = playout->INDICES[i];
+        }
+        SetRegRawSimd(playout->R0, SIMDUtils::SIMD128InnerShuffle(GetRegRawSimd(playout->R1), GetRegRawSimd(playout->R2), Wasm::Simd::MAX_LANES, lanes));
     }
 
     template <class T>

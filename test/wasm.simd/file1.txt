@@ -1,0 +1,1094 @@
+
+-Wasm
+-WasmSimd
+-Dump
+-MaxAsmJsInterpreterRunCount:0
+-Maic:0
+-OutputFile:file1.txt
+-Trace
+BeginBackEnd - function: m128_load_test[2] ( (#2.2), #10, line 1), mode: FullJit (Asmjs)
+-----------------------------------------------------------------------------
+************   IR after Lowerer (FullJit)  ************
+-----------------------------------------------------------------------------
+Function m128_load_test[2] ( (#2.2), #10)         Instr Count:100
+
+                       FunctionEntry                                          #
+
+
+ GLOBOPT INSTR:     s1.var          =  LdAsmJsEnv                                             #
+
+
+    s165.u64        =  MOV            s166<16>.u64                            #
+    s1.var          =  MOV            [s165.u64+88].u64                       #
+
+
+ GLOBOPT INSTR:     s3.var          =  Ld_A           [s1.var!].var                           #
+
+
+    s3.var          =  MOV            [s1.var!].var                           #
+
+
+ GLOBOPT INSTR:     s2.var          =  Ld_A           [s3.var!+32].var                        #
+
+
+    s2.var          =  MOV            [s3.var!+32].var                        #
+
+
+ GLOBOPT INSTR:     s4.var          =  Ld_A           [s2.var+56].var                         #
+
+
+    s4.var          =  MOV            [s2.var+56].var                         #
+
+
+ GLOBOPT INSTR:     s5.u32          =  Ld_A           [s2.var!+64].u32                        #
+
+
+    s5.u32          =  MOV            [s2.var!+64].u32                        #
+
+
+ GLOBOPT INSTR:     s11.i32         =  ArgIn_A        prm1<24>.i32!                           #
+
+
+    s11.i32         =  MOV            prm1<24>.i32!                           #
+
+
+ GLOBOPT INSTR:     s27.u32         =  And_I4         s11.i32, 4294967292 (0xFFFFFFFC).u32    #0017 
+
+
+    s27.u32         =  MOV            s11.i32                                 #
+    s27.u32         =  AND            s27.u32, 4294967292 (0xFFFFFFFC).u32    #0017 
+
+
+ GLOBOPT INSTR:     s16[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32].simd128, s5.u32 #0017 
+
+
+    s16[Simd128Float32x4].simd128 = MOVUPS  [s4[Float32Array].var+s27.u32].simd128 #
+
+
+ GLOBOPT INSTR:     s14.i32         =  Simd128_ExtractLane_I4  s16[Simd128Float32x4].simd128!, 0 (0x0).i32 #0038 
+
+
+    s14.i32         =  MOVD           s16[Simd128Float32x4].simd128           #
+
+
+ GLOBOPT INSTR:     s30.i32         =  PopCnt         s14.i32!                                #003e 
+
+
+    s30.i32         =  POPCNT         s14.i32!                                #003e 
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32].i32 = StArrViewElem  s30.i32!                            #0041 
+
+
+    [s4.var+s11.u32].i32 = MOV        s30.i32                                 #
+
+
+ GLOBOPT INSTR:     s33[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32].simd128, s5.u32 #004c 
+
+
+    s33[Simd128Float32x4].simd128 = MOVUPS  [s4[Float32Array].var+s27.u32].simd128 #
+
+
+ GLOBOPT INSTR:     s37.i32         =  Simd128_ExtractLane_I4  s33[Simd128Float32x4].simd128!, 1 (0x1).i32 #006d 
+
+
+    s164.simd128    =  MOVUPS         s33[Simd128Float32x4].simd128           #
+    s164.simd128    =  PSRLDQ         s164.simd128, 4 (0x4).i8                #
+    s37.i32         =  MOVD           s164.simd128                            #
+
+
+ GLOBOPT INSTR:     s38.i32         =  PopCnt         s37.i32!                                #0073 
+
+
+    s38.i32         =  POPCNT         s37.i32!                                #0073 
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+4].i32 = StArrViewElem  s38.i32!                          #0076 
+
+
+    [s4.var+s11.u32+4].i32 = MOV      s38.i32                                 #
+
+
+ GLOBOPT INSTR:     s41[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32].simd128, s5.u32 #0081 
+
+
+    s41[Simd128Float32x4].simd128 = MOVUPS  [s4[Float32Array].var+s27.u32].simd128 #
+
+
+ GLOBOPT INSTR:     s45.i32         =  Simd128_ExtractLane_I4  s41[Simd128Float32x4].simd128!, 2 (0x2).i32 #00a2 
+
+
+    s163.simd128    =  MOVUPS         s41[Simd128Float32x4].simd128           #
+    s163.simd128    =  PSRLDQ         s163.simd128, 8 (0x8).i8                #
+    s45.i32         =  MOVD           s163.simd128                            #
+
+
+ GLOBOPT INSTR:     s46.i32         =  PopCnt         s45.i32!                                #00a8 
+
+
+    s46.i32         =  POPCNT         s45.i32!                                #00a8 
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+8].i32 = StArrViewElem  s46.i32!                          #00ab 
+
+
+    [s4.var+s11.u32+8].i32 = MOV      s46.i32                                 #
+
+
+ GLOBOPT INSTR:     s49[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32].simd128, s5.u32 #00b6 
+
+
+    s49[Simd128Float32x4].simd128 = MOVUPS  [s4[Float32Array].var+s27.u32].simd128 #
+
+
+ GLOBOPT INSTR:     s53.i32         =  Simd128_ExtractLane_I4  s49[Simd128Float32x4].simd128!, 3 (0x3).i32 #00d7 
+
+
+    s162.simd128    =  MOVUPS         s49[Simd128Float32x4].simd128           #
+    s162.simd128    =  PSRLDQ         s162.simd128, 12 (0xC).i8               #
+    s53.i32         =  MOVD           s162.simd128                            #
+
+
+ GLOBOPT INSTR:     s54.i32         =  PopCnt         s53.i32!                                #00dd 
+
+
+    s54.i32         =  POPCNT         s53.i32!                                #00dd 
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+12].i32 = StArrViewElem  s54.i32!                         #00e0 
+
+
+    [s4.var+s11.u32+12].i32 = MOV     s54.i32                                 #
+
+
+ GLOBOPT INSTR:     s57[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32+20].simd128, s5.u32 #00eb 
+
+
+    s57[Simd128Float32x4].simd128 = MOVUPS  [s4[Float32Array].var+s27.u32+20].simd128 #
+
+
+ GLOBOPT INSTR:     s61.i32         =  Simd128_ExtractLane_I4  s57[Simd128Float32x4].simd128!, 0 (0x0).i32 #010c 
+
+
+    s61.i32         =  MOVD           s57[Simd128Float32x4].simd128           #
+
+
+ GLOBOPT INSTR:     s62.i32         =  PopCnt         s61.i32!                                #0112 
+
+
+    s62.i32         =  POPCNT         s61.i32!                                #0112 
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+20].i32 = StArrViewElem  s62.i32!                         #0115 
+
+
+    [s4.var+s11.u32+20].i32 = MOV     s62.i32                                 #
+
+
+ GLOBOPT INSTR:     s65[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32+20].simd128, s5.u32 #0120 
+
+
+    s65[Simd128Float32x4].simd128 = MOVUPS  [s4[Float32Array].var+s27.u32+20].simd128 #
+
+
+ GLOBOPT INSTR:     s69.i32         =  Simd128_ExtractLane_I4  s65[Simd128Float32x4].simd128!, 1 (0x1).i32 #0141 
+
+
+    s161.simd128    =  MOVUPS         s65[Simd128Float32x4].simd128           #
+    s161.simd128    =  PSRLDQ         s161.simd128, 4 (0x4).i8                #
+    s69.i32         =  MOVD           s161.simd128                            #
+
+
+ GLOBOPT INSTR:     s70.i32         =  PopCnt         s69.i32!                                #0147 
+
+
+    s70.i32         =  POPCNT         s69.i32!                                #0147 
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+24].i32 = StArrViewElem  s70.i32!                         #014a 
+
+
+    [s4.var+s11.u32+24].i32 = MOV     s70.i32                                 #
+
+
+ GLOBOPT INSTR:     s73[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32+20].simd128, s5.u32 #0155 
+
+
+    s73[Simd128Float32x4].simd128 = MOVUPS  [s4[Float32Array].var+s27.u32+20].simd128 #
+
+
+ GLOBOPT INSTR:     s77.i32         =  Simd128_ExtractLane_I4  s73[Simd128Float32x4].simd128!, 2 (0x2).i32 #0176 
+
+
+    s160.simd128    =  MOVUPS         s73[Simd128Float32x4].simd128           #
+    s160.simd128    =  PSRLDQ         s160.simd128, 8 (0x8).i8                #
+    s77.i32         =  MOVD           s160.simd128                            #
+
+
+ GLOBOPT INSTR:     s78.i32         =  PopCnt         s77.i32!                                #017c 
+
+
+    s78.i32         =  POPCNT         s77.i32!                                #017c 
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+28].i32 = StArrViewElem  s78.i32!                         #017f 
+
+
+    [s4.var+s11.u32+28].i32 = MOV     s78.i32                                 #
+
+
+ GLOBOPT INSTR:     s81[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32+20].simd128, s5.u32 #018a 
+
+
+    s81[Simd128Float32x4].simd128 = MOVUPS  [s4[Float32Array].var+s27.u32+20].simd128 #
+
+
+ GLOBOPT INSTR:     s85.i32         =  Simd128_ExtractLane_I4  s81[Simd128Float32x4].simd128!, 3 (0x3).i32 #01ab 
+
+
+    s159.simd128    =  MOVUPS         s81[Simd128Float32x4].simd128           #
+    s159.simd128    =  PSRLDQ         s159.simd128, 12 (0xC).i8               #
+    s85.i32         =  MOVD           s159.simd128                            #
+
+
+ GLOBOPT INSTR:     s86.i32         =  PopCnt         s85.i32!                                #01b1 
+
+
+    s86.i32         =  POPCNT         s85.i32!                                #01b1 
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+32].i32 = StArrViewElem  s86.i32!                         #01b4 
+
+
+    [s4.var+s11.u32+32].i32 = MOV     s86.i32                                 #
+
+
+ GLOBOPT INSTR:     s89[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32+44].simd128, s5.u32 #01bf 
+
+
+    s89[Simd128Float32x4].simd128 = MOVUPS  [s4[Float32Array].var+s27.u32+44].simd128 #
+
+
+ GLOBOPT INSTR:     s93.i32         =  Simd128_ExtractLane_I4  s89[Simd128Float32x4].simd128!, 0 (0x0).i32 #01e0 
+
+
+    s93.i32         =  MOVD           s89[Simd128Float32x4].simd128           #
+
+
+ GLOBOPT INSTR:     s94.i32         =  PopCnt         s93.i32!                                #01e6 
+
+
+    s94.i32         =  POPCNT         s93.i32!                                #01e6 
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+44].i32 = StArrViewElem  s94.i32!                         #01e9 
+
+
+    [s4.var+s11.u32+44].i32 = MOV     s94.i32                                 #
+
+
+ GLOBOPT INSTR:     s97[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32+44].simd128, s5.u32 #01f4 
+
+
+    s97[Simd128Float32x4].simd128 = MOVUPS  [s4[Float32Array].var+s27.u32+44].simd128 #
+
+
+ GLOBOPT INSTR:     s101.i32        =  Simd128_ExtractLane_I4  s97[Simd128Float32x4].simd128!, 1 (0x1).i32 #0215 
+
+
+    s158.simd128    =  MOVUPS         s97[Simd128Float32x4].simd128           #
+    s158.simd128    =  PSRLDQ         s158.simd128, 4 (0x4).i8                #
+    s101.i32        =  MOVD           s158.simd128                            #
+
+
+ GLOBOPT INSTR:     s102.i32        =  PopCnt         s101.i32!                               #021b 
+
+
+    s102.i32        =  POPCNT         s101.i32!                               #021b 
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+48].i32 = StArrViewElem  s102.i32!                        #021e 
+
+
+    [s4.var+s11.u32+48].i32 = MOV     s102.i32                                #
+
+
+ GLOBOPT INSTR:     s105[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32+44].simd128, s5.u32 #0229 
+
+
+    s105[Simd128Float32x4].simd128 = MOVUPS  [s4[Float32Array].var+s27.u32+44].simd128 #
+
+
+ GLOBOPT INSTR:     s109.i32        =  Simd128_ExtractLane_I4  s105[Simd128Float32x4].simd128!, 2 (0x2).i32 #024a 
+
+
+    s157.simd128    =  MOVUPS         s105[Simd128Float32x4].simd128          #
+    s157.simd128    =  PSRLDQ         s157.simd128, 8 (0x8).i8                #
+    s109.i32        =  MOVD           s157.simd128                            #
+
+
+ GLOBOPT INSTR:     s110.i32        =  PopCnt         s109.i32!                               #0250 
+
+
+    s110.i32        =  POPCNT         s109.i32!                               #0250 
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+52].i32 = StArrViewElem  s110.i32!                        #0253 
+
+
+    [s4.var+s11.u32+52].i32 = MOV     s110.i32                                #
+
+
+ GLOBOPT INSTR:     s113[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32+44].simd128, s5.u32 #025e 
+
+
+    s113[Simd128Float32x4].simd128 = MOVUPS  [s4[Float32Array].var+s27.u32+44].simd128 #
+
+
+ GLOBOPT INSTR:     s117.i32        =  Simd128_ExtractLane_I4  s113[Simd128Float32x4].simd128!, 3 (0x3).i32 #027f 
+
+
+    s156.simd128    =  MOVUPS         s113[Simd128Float32x4].simd128          #
+    s156.simd128    =  PSRLDQ         s156.simd128, 12 (0xC).i8               #
+    s117.i32        =  MOVD           s156.simd128                            #
+
+
+ GLOBOPT INSTR:     s118.i32        =  PopCnt         s117.i32!                               #0285 
+
+
+    s118.i32        =  POPCNT         s117.i32!                               #0285 
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+56].i32 = StArrViewElem  s118.i32!                        #0288 
+
+
+    [s4.var+s11.u32+56].i32 = MOV     s118.i32                                #
+
+
+ GLOBOPT INSTR:     s121[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32+68].simd128, s5.u32 #0293 
+
+
+    s121[Simd128Float32x4].simd128 = MOVUPS  [s4[Float32Array].var+s27.u32+68].simd128 #
+
+
+ GLOBOPT INSTR:     s125.i32        =  Simd128_ExtractLane_I4  s121[Simd128Float32x4].simd128!, 0 (0x0).i32 #02b4 
+
+
+    s125.i32        =  MOVD           s121[Simd128Float32x4].simd128          #
+
+
+ GLOBOPT INSTR:     s126.i32        =  PopCnt         s125.i32!                               #02ba 
+
+
+    s126.i32        =  POPCNT         s125.i32!                               #02ba 
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+68].i32 = StArrViewElem  s126.i32!                        #02bd 
+
+
+    [s4.var+s11.u32+68].i32 = MOV     s126.i32                                #
+
+
+ GLOBOPT INSTR:     s129[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32+68].simd128, s5.u32 #02c8 
+
+
+    s129[Simd128Float32x4].simd128 = MOVUPS  [s4[Float32Array].var+s27.u32+68].simd128 #
+
+
+ GLOBOPT INSTR:     s133.i32        =  Simd128_ExtractLane_I4  s129[Simd128Float32x4].simd128!, 1 (0x1).i32 #02e9 
+
+
+    s155.simd128    =  MOVUPS         s129[Simd128Float32x4].simd128          #
+    s155.simd128    =  PSRLDQ         s155.simd128, 4 (0x4).i8                #
+    s133.i32        =  MOVD           s155.simd128                            #
+
+
+ GLOBOPT INSTR:     s134.i32        =  PopCnt         s133.i32!                               #02ef 
+
+
+    s134.i32        =  POPCNT         s133.i32!                               #02ef 
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+72].i32 = StArrViewElem  s134.i32!                        #02f2 
+
+
+    [s4.var+s11.u32+72].i32 = MOV     s134.i32                                #
+
+
+ GLOBOPT INSTR:     s137[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32+68].simd128, s5.u32 #02fd 
+
+
+    s137[Simd128Float32x4].simd128 = MOVUPS  [s4[Float32Array].var+s27.u32+68].simd128 #
+
+
+ GLOBOPT INSTR:     s141.i32        =  Simd128_ExtractLane_I4  s137[Simd128Float32x4].simd128!, 2 (0x2).i32 #031e 
+
+
+    s154.simd128    =  MOVUPS         s137[Simd128Float32x4].simd128          #
+    s154.simd128    =  PSRLDQ         s154.simd128, 8 (0x8).i8                #
+    s141.i32        =  MOVD           s154.simd128                            #
+
+
+ GLOBOPT INSTR:     s142.i32        =  PopCnt         s141.i32!                               #0324 
+
+
+    s142.i32        =  POPCNT         s141.i32!                               #0324 
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+76].i32 = StArrViewElem  s142.i32!                        #0327 
+
+
+    [s4.var+s11.u32+76].i32 = MOV     s142.i32                                #
+
+
+ GLOBOPT INSTR:     s145[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32!+68].simd128, s5.u32! #0332 
+
+
+    s145[Simd128Float32x4].simd128 = MOVUPS  [s4[Float32Array].var+s27.u32!+68].simd128 #
+
+
+ GLOBOPT INSTR:     s149.i32        =  Simd128_ExtractLane_I4  s145[Simd128Float32x4].simd128!, 3 (0x3).i32 #0353 
+
+
+    s153.simd128    =  MOVUPS         s145[Simd128Float32x4].simd128          #
+    s153.simd128    =  PSRLDQ         s153.simd128, 12 (0xC).i8               #
+    s149.i32        =  MOVD           s153.simd128                            #
+
+
+ GLOBOPT INSTR:     s150.i32        =  PopCnt         s149.i32!                               #0359 
+
+
+    s150.i32        =  POPCNT         s149.i32!                               #0359 
+
+
+ GLOBOPT INSTR:     [s4.var!+s11.u32!+80].i32 = StArrViewElem  s150.i32!                      #035c 
+
+
+    [s4.var+s11.u32+80].i32 = MOV     s150.i32                                #
+
+
+ GLOBOPT INSTR:                        Ret                                                    #036b 
+
+
+                       Ret                                                    #036b 
+
+
+ GLOBOPT INSTR:                        FunctionExit                                           #
+
+
+                       FunctionExit                                           #
+-----------------------------------------------------------------------------
+Function m128_load_test[2] ( (#2.2), #10)         Instr Count:100		Size:421
+
+ 252B4770000           FunctionEntry  
+ 252B4770000   arg3(s168)<16>.i32 = MOV  (rdx).i32
+ 252B4770004   arg2(s167)<8>.i64 = MOV  (rcx).i64
+ 252B4770009           PrologStart    
+ 252B4770009           PUSH           (rbp).i64
+ 252B477000B   (rbp).i64 = MOV        (rsp).i64
+ 252B477000E   (rsp).i64 = SUB        (rsp).i64, 16 (0x10).i64
+ 252B4770012           PUSH           (rbx).i64
+ 252B4770014   (rsp).i64 = SUB        (rsp).i64, 40 (0x28).i64
+ 252B4770018           PrologEnd      
+
+
+ GLOBOPT INSTR:     s1.var          =  LdAsmJsEnv                                             #
+
+
+ 252B4770018   s165(rax).u64 = MOV    s166<16>.u64
+ 252B477001C   s1(rax).var = MOV      [s165(rax).u64+88].u64
+
+
+ GLOBOPT INSTR:     s3.var          =  Ld_A           [s1.var!].var                           #
+
+
+ 252B4770020   s3(rax).var = MOV      [s1(rax).var!].var
+
+
+ GLOBOPT INSTR:     s2.var          =  Ld_A           [s3.var!+32].var                        #
+
+
+ 252B4770023   s2(rax).var = MOV      [s3(rax).var!+32].var
+
+
+ GLOBOPT INSTR:     s4.var          =  Ld_A           [s2.var+56].var                         #
+
+
+ 252B4770027   s4(rcx).var = MOV      [s2(rax).var+56].var
+
+
+ GLOBOPT INSTR:     s11.i32         =  ArgIn_A        prm1<24>.i32!                           #
+
+
+ 252B477002B   s11(rax).i32 = MOV     prm1<24>.i32!
+
+
+ GLOBOPT INSTR:     s27.u32         =  And_I4         s11.i32, 4294967292 (0xFFFFFFFC).u32    #0017 
+
+
+ 252B477002E   s27(rdx).u32 = MOV     s11(rax).i32
+ 252B4770030   s27(rdx).u32 = AND     s27(rdx).u32, 4294967292 (0xFFFFFFFC).u32
+
+
+ GLOBOPT INSTR:     s16[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32].simd128, s5.u32 #0017 
+
+
+ 252B4770036   s16(xmm0)[Simd128Float32x4].simd128 = MOVUPS  [s4(rcx)[Float32Array].var+s27(rdx).u32].simd128
+
+
+ GLOBOPT INSTR:     s14.i32         =  Simd128_ExtractLane_I4  s16[Simd128Float32x4].simd128!, 0 (0x0).i32 #0038 
+
+
+ 252B477003B   s14(rbx).i32 = MOVD    s16(xmm0)[Simd128Float32x4].simd128
+
+
+ GLOBOPT INSTR:     s30.i32         =  PopCnt         s14.i32!                                #003e 
+
+
+ 252B477003F   s30(rbx).i32 = POPCNT  s14(rbx).i32!
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32].i32 = StArrViewElem  s30.i32!                            #0041 
+
+
+ 252B4770043   [s4(rcx).var+s11(rax).u32].i32 = MOV  s30(rbx).i32
+
+
+ GLOBOPT INSTR:     s33[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32].simd128, s5.u32 #004c 
+
+
+ 252B4770046   s33(xmm0)[Simd128Float32x4].simd128 = MOVUPS  [s4(rcx)[Float32Array].var+s27(rdx).u32].simd128
+
+
+ GLOBOPT INSTR:     s37.i32         =  Simd128_ExtractLane_I4  s33[Simd128Float32x4].simd128!, 1 (0x1).i32 #006d 
+
+
+ 252B477004B   s164(xmm0).simd128 = PSRLDQ  s164(xmm0).simd128, 4 (0x4).i8
+ 252B4770051   s37(rbx).i32 = MOVD    s164(xmm0).simd128
+
+
+ GLOBOPT INSTR:     s38.i32         =  PopCnt         s37.i32!                                #0073 
+
+
+ 252B4770055   s38(rbx).i32 = POPCNT  s37(rbx).i32!
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+4].i32 = StArrViewElem  s38.i32!                          #0076 
+
+
+ 252B4770059   [s4(rcx).var+s11(rax).u32+4].i32 = MOV  s38(rbx).i32
+
+
+ GLOBOPT INSTR:     s41[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32].simd128, s5.u32 #0081 
+
+
+ 252B477005D   s41(xmm0)[Simd128Float32x4].simd128 = MOVUPS  [s4(rcx)[Float32Array].var+s27(rdx).u32].simd128
+
+
+ GLOBOPT INSTR:     s45.i32         =  Simd128_ExtractLane_I4  s41[Simd128Float32x4].simd128!, 2 (0x2).i32 #00a2 
+
+
+ 252B4770062   s163(xmm0).simd128 = PSRLDQ  s163(xmm0).simd128, 8 (0x8).i8
+ 252B4770068   s45(rbx).i32 = MOVD    s163(xmm0).simd128
+
+
+ GLOBOPT INSTR:     s46.i32         =  PopCnt         s45.i32!                                #00a8 
+
+
+ 252B477006C   s46(rbx).i32 = POPCNT  s45(rbx).i32!
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+8].i32 = StArrViewElem  s46.i32!                          #00ab 
+
+
+ 252B4770070   [s4(rcx).var+s11(rax).u32+8].i32 = MOV  s46(rbx).i32
+
+
+ GLOBOPT INSTR:     s49[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32].simd128, s5.u32 #00b6 
+
+
+ 252B4770074   s49(xmm0)[Simd128Float32x4].simd128 = MOVUPS  [s4(rcx)[Float32Array].var+s27(rdx).u32].simd128
+
+
+ GLOBOPT INSTR:     s53.i32         =  Simd128_ExtractLane_I4  s49[Simd128Float32x4].simd128!, 3 (0x3).i32 #00d7 
+
+
+ 252B4770079   s162(xmm0).simd128 = PSRLDQ  s162(xmm0).simd128, 12 (0xC).i8
+ 252B477007F   s53(rbx).i32 = MOVD    s162(xmm0).simd128
+
+
+ GLOBOPT INSTR:     s54.i32         =  PopCnt         s53.i32!                                #00dd 
+
+
+ 252B4770083   s54(rbx).i32 = POPCNT  s53(rbx).i32!
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+12].i32 = StArrViewElem  s54.i32!                         #00e0 
+
+
+ 252B4770087   [s4(rcx).var+s11(rax).u32+12].i32 = MOV  s54(rbx).i32
+
+
+ GLOBOPT INSTR:     s57[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32+20].simd128, s5.u32 #00eb 
+
+
+ 252B477008B   s57(xmm0)[Simd128Float32x4].simd128 = MOVUPS  [s4(rcx)[Float32Array].var+s27(rdx).u32+20].simd128
+
+
+ GLOBOPT INSTR:     s61.i32         =  Simd128_ExtractLane_I4  s57[Simd128Float32x4].simd128!, 0 (0x0).i32 #010c 
+
+
+ 252B4770091   s61(rbx).i32 = MOVD    s57(xmm0)[Simd128Float32x4].simd128
+
+
+ GLOBOPT INSTR:     s62.i32         =  PopCnt         s61.i32!                                #0112 
+
+
+ 252B4770095   s62(rbx).i32 = POPCNT  s61(rbx).i32!
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+20].i32 = StArrViewElem  s62.i32!                         #0115 
+
+
+ 252B4770099   [s4(rcx).var+s11(rax).u32+20].i32 = MOV  s62(rbx).i32
+
+
+ GLOBOPT INSTR:     s65[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32+20].simd128, s5.u32 #0120 
+
+
+ 252B477009D   s65(xmm0)[Simd128Float32x4].simd128 = MOVUPS  [s4(rcx)[Float32Array].var+s27(rdx).u32+20].simd128
+
+
+ GLOBOPT INSTR:     s69.i32         =  Simd128_ExtractLane_I4  s65[Simd128Float32x4].simd128!, 1 (0x1).i32 #0141 
+
+
+ 252B47700A3   s161(xmm0).simd128 = PSRLDQ  s161(xmm0).simd128, 4 (0x4).i8
+ 252B47700A9   s69(rbx).i32 = MOVD    s161(xmm0).simd128
+
+
+ GLOBOPT INSTR:     s70.i32         =  PopCnt         s69.i32!                                #0147 
+
+
+ 252B47700AD   s70(rbx).i32 = POPCNT  s69(rbx).i32!
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+24].i32 = StArrViewElem  s70.i32!                         #014a 
+
+
+ 252B47700B1   [s4(rcx).var+s11(rax).u32+24].i32 = MOV  s70(rbx).i32
+
+
+ GLOBOPT INSTR:     s73[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32+20].simd128, s5.u32 #0155 
+
+
+ 252B47700B5   s73(xmm0)[Simd128Float32x4].simd128 = MOVUPS  [s4(rcx)[Float32Array].var+s27(rdx).u32+20].simd128
+
+
+ GLOBOPT INSTR:     s77.i32         =  Simd128_ExtractLane_I4  s73[Simd128Float32x4].simd128!, 2 (0x2).i32 #0176 
+
+
+ 252B47700BB   s160(xmm0).simd128 = PSRLDQ  s160(xmm0).simd128, 8 (0x8).i8
+ 252B47700C1   s77(rbx).i32 = MOVD    s160(xmm0).simd128
+
+
+ GLOBOPT INSTR:     s78.i32         =  PopCnt         s77.i32!                                #017c 
+
+
+ 252B47700C5   s78(rbx).i32 = POPCNT  s77(rbx).i32!
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+28].i32 = StArrViewElem  s78.i32!                         #017f 
+
+
+ 252B47700C9   [s4(rcx).var+s11(rax).u32+28].i32 = MOV  s78(rbx).i32
+
+
+ GLOBOPT INSTR:     s81[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32+20].simd128, s5.u32 #018a 
+
+
+ 252B47700CD   s81(xmm0)[Simd128Float32x4].simd128 = MOVUPS  [s4(rcx)[Float32Array].var+s27(rdx).u32+20].simd128
+
+
+ GLOBOPT INSTR:     s85.i32         =  Simd128_ExtractLane_I4  s81[Simd128Float32x4].simd128!, 3 (0x3).i32 #01ab 
+
+
+ 252B47700D3   s159(xmm0).simd128 = PSRLDQ  s159(xmm0).simd128, 12 (0xC).i8
+ 252B47700D9   s85(rbx).i32 = MOVD    s159(xmm0).simd128
+
+
+ GLOBOPT INSTR:     s86.i32         =  PopCnt         s85.i32!                                #01b1 
+
+
+ 252B47700DD   s86(rbx).i32 = POPCNT  s85(rbx).i32!
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+32].i32 = StArrViewElem  s86.i32!                         #01b4 
+
+
+ 252B47700E1   [s4(rcx).var+s11(rax).u32+32].i32 = MOV  s86(rbx).i32
+
+
+ GLOBOPT INSTR:     s89[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32+44].simd128, s5.u32 #01bf 
+
+
+ 252B47700E5   s89(xmm0)[Simd128Float32x4].simd128 = MOVUPS  [s4(rcx)[Float32Array].var+s27(rdx).u32+44].simd128
+
+
+ GLOBOPT INSTR:     s93.i32         =  Simd128_ExtractLane_I4  s89[Simd128Float32x4].simd128!, 0 (0x0).i32 #01e0 
+
+
+ 252B47700EB   s93(rbx).i32 = MOVD    s89(xmm0)[Simd128Float32x4].simd128
+
+
+ GLOBOPT INSTR:     s94.i32         =  PopCnt         s93.i32!                                #01e6 
+
+
+ 252B47700EF   s94(rbx).i32 = POPCNT  s93(rbx).i32!
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+44].i32 = StArrViewElem  s94.i32!                         #01e9 
+
+
+ 252B47700F3   [s4(rcx).var+s11(rax).u32+44].i32 = MOV  s94(rbx).i32
+
+
+ GLOBOPT INSTR:     s97[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32+44].simd128, s5.u32 #01f4 
+
+
+ 252B47700F7   s97(xmm0)[Simd128Float32x4].simd128 = MOVUPS  [s4(rcx)[Float32Array].var+s27(rdx).u32+44].simd128
+
+
+ GLOBOPT INSTR:     s101.i32        =  Simd128_ExtractLane_I4  s97[Simd128Float32x4].simd128!, 1 (0x1).i32 #0215 
+
+
+ 252B47700FD   s158(xmm0).simd128 = PSRLDQ  s158(xmm0).simd128, 4 (0x4).i8
+ 252B4770103   s101(rbx).i32 = MOVD   s158(xmm0).simd128
+
+
+ GLOBOPT INSTR:     s102.i32        =  PopCnt         s101.i32!                               #021b 
+
+
+ 252B4770107   s102(rbx).i32 = POPCNT  s101(rbx).i32!
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+48].i32 = StArrViewElem  s102.i32!                        #021e 
+
+
+ 252B477010B   [s4(rcx).var+s11(rax).u32+48].i32 = MOV  s102(rbx).i32
+
+
+ GLOBOPT INSTR:     s105[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32+44].simd128, s5.u32 #0229 
+
+
+ 252B477010F   s105(xmm0)[Simd128Float32x4].simd128 = MOVUPS  [s4(rcx)[Float32Array].var+s27(rdx).u32+44].simd128
+
+
+ GLOBOPT INSTR:     s109.i32        =  Simd128_ExtractLane_I4  s105[Simd128Float32x4].simd128!, 2 (0x2).i32 #024a 
+
+
+ 252B4770115   s157(xmm0).simd128 = PSRLDQ  s157(xmm0).simd128, 8 (0x8).i8
+ 252B477011B   s109(rbx).i32 = MOVD   s157(xmm0).simd128
+
+
+ GLOBOPT INSTR:     s110.i32        =  PopCnt         s109.i32!                               #0250 
+
+
+ 252B477011F   s110(rbx).i32 = POPCNT  s109(rbx).i32!
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+52].i32 = StArrViewElem  s110.i32!                        #0253 
+
+
+ 252B4770123   [s4(rcx).var+s11(rax).u32+52].i32 = MOV  s110(rbx).i32
+
+
+ GLOBOPT INSTR:     s113[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32+44].simd128, s5.u32 #025e 
+
+
+ 252B4770127   s113(xmm0)[Simd128Float32x4].simd128 = MOVUPS  [s4(rcx)[Float32Array].var+s27(rdx).u32+44].simd128
+
+
+ GLOBOPT INSTR:     s117.i32        =  Simd128_ExtractLane_I4  s113[Simd128Float32x4].simd128!, 3 (0x3).i32 #027f 
+
+
+ 252B477012D   s156(xmm0).simd128 = PSRLDQ  s156(xmm0).simd128, 12 (0xC).i8
+ 252B4770133   s117(rbx).i32 = MOVD   s156(xmm0).simd128
+
+
+ GLOBOPT INSTR:     s118.i32        =  PopCnt         s117.i32!                               #0285 
+
+
+ 252B4770137   s118(rbx).i32 = POPCNT  s117(rbx).i32!
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+56].i32 = StArrViewElem  s118.i32!                        #0288 
+
+
+ 252B477013B   [s4(rcx).var+s11(rax).u32+56].i32 = MOV  s118(rbx).i32
+
+
+ GLOBOPT INSTR:     s121[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32+68].simd128, s5.u32 #0293 
+
+
+ 252B477013F   s121(xmm0)[Simd128Float32x4].simd128 = MOVUPS  [s4(rcx)[Float32Array].var+s27(rdx).u32+68].simd128
+
+
+ GLOBOPT INSTR:     s125.i32        =  Simd128_ExtractLane_I4  s121[Simd128Float32x4].simd128!, 0 (0x0).i32 #02b4 
+
+
+ 252B4770145   s125(rbx).i32 = MOVD   s121(xmm0)[Simd128Float32x4].simd128
+
+
+ GLOBOPT INSTR:     s126.i32        =  PopCnt         s125.i32!                               #02ba 
+
+
+ 252B4770149   s126(rbx).i32 = POPCNT  s125(rbx).i32!
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+68].i32 = StArrViewElem  s126.i32!                        #02bd 
+
+
+ 252B477014D   [s4(rcx).var+s11(rax).u32+68].i32 = MOV  s126(rbx).i32
+
+
+ GLOBOPT INSTR:     s129[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32+68].simd128, s5.u32 #02c8 
+
+
+ 252B4770151   s129(xmm0)[Simd128Float32x4].simd128 = MOVUPS  [s4(rcx)[Float32Array].var+s27(rdx).u32+68].simd128
+
+
+ GLOBOPT INSTR:     s133.i32        =  Simd128_ExtractLane_I4  s129[Simd128Float32x4].simd128!, 1 (0x1).i32 #02e9 
+
+
+ 252B4770157   s155(xmm0).simd128 = PSRLDQ  s155(xmm0).simd128, 4 (0x4).i8
+ 252B477015D   s133(rbx).i32 = MOVD   s155(xmm0).simd128
+
+
+ GLOBOPT INSTR:     s134.i32        =  PopCnt         s133.i32!                               #02ef 
+
+
+ 252B4770161   s134(rbx).i32 = POPCNT  s133(rbx).i32!
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+72].i32 = StArrViewElem  s134.i32!                        #02f2 
+
+
+ 252B4770165   [s4(rcx).var+s11(rax).u32+72].i32 = MOV  s134(rbx).i32
+
+
+ GLOBOPT INSTR:     s137[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32+68].simd128, s5.u32 #02fd 
+
+
+ 252B4770169   s137(xmm0)[Simd128Float32x4].simd128 = MOVUPS  [s4(rcx)[Float32Array].var+s27(rdx).u32+68].simd128
+
+
+ GLOBOPT INSTR:     s141.i32        =  Simd128_ExtractLane_I4  s137[Simd128Float32x4].simd128!, 2 (0x2).i32 #031e 
+
+
+ 252B477016F   s154(xmm0).simd128 = PSRLDQ  s154(xmm0).simd128, 8 (0x8).i8
+ 252B4770175   s141(rbx).i32 = MOVD   s154(xmm0).simd128
+
+
+ GLOBOPT INSTR:     s142.i32        =  PopCnt         s141.i32!                               #0324 
+
+
+ 252B4770179   s142(rbx).i32 = POPCNT  s141(rbx).i32!
+
+
+ GLOBOPT INSTR:     [s4.var+s11.u32+76].i32 = StArrViewElem  s142.i32!                        #0327 
+
+
+ 252B477017D   [s4(rcx).var+s11(rax).u32+76].i32 = MOV  s142(rbx).i32
+
+
+ GLOBOPT INSTR:     s145[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var+s27.u32!+68].simd128, s5.u32! #0332 
+
+
+ 252B4770181   s145(xmm0)[Simd128Float32x4].simd128 = MOVUPS  [s4(rcx)[Float32Array].var+s27(rdx).u32!+68].simd128
+
+
+ GLOBOPT INSTR:     s149.i32        =  Simd128_ExtractLane_I4  s145[Simd128Float32x4].simd128!, 3 (0x3).i32 #0353 
+
+
+ 252B4770187   s153(xmm0).simd128 = PSRLDQ  s153(xmm0).simd128, 12 (0xC).i8
+ 252B477018D   s149(rdx).i32 = MOVD   s153(xmm0).simd128
+
+
+ GLOBOPT INSTR:     s150.i32        =  PopCnt         s149.i32!                               #0359 
+
+
+ 252B4770191   s150(rdx).i32 = POPCNT  s149(rdx).i32!
+
+
+ GLOBOPT INSTR:     [s4.var!+s11.u32!+80].i32 = StArrViewElem  s150.i32!                      #035c 
+
+
+ 252B4770195   [s4(rcx).var+s11(rax).u32+80].i32 = MOV  s150(rdx).i32
+
+
+ GLOBOPT INSTR:                        Ret                                                    #036b 
+
+
+ 252B4770199   (rsp).i64 = ADD        (rsp).i64, 40 (0x28).i64
+ 252B477019D   (rbx).i64 = POP        
+ 252B477019F   (rsp).i64 = MOV        (rbp).i64
+ 252B47701A2   (rbp).i64 = POP        
+ 252B47701A4           RET            0 (0x0).i32
+
+
+ GLOBOPT INSTR:                        FunctionExit                                           #
+
+
+ 252B47701A5           FunctionExit   
+EndBackEnd - function: m128_load_test[2] ( (#2.2), #10, line 1), mode: FullJit time:187.607485 mSec (Asmjs)
+BeginBackEnd - function: m128_load4[0] ( (#2.0), #8, line 1), mode: FullJit (Asmjs)
+-----------------------------------------------------------------------------
+************   IR after Lowerer (FullJit)  ************
+-----------------------------------------------------------------------------
+Function m128_load4[0] ( (#2.0), #8)              Instr Count:15
+
+                       FunctionEntry                                          #
+
+
+ GLOBOPT INSTR:     s1.var          =  LdAsmJsEnv                                             #
+
+
+    s29.u64         =  MOV            s30<16>.u64                             #
+    s1.var          =  MOV            [s29.u64+88].u64                        #
+
+
+ GLOBOPT INSTR:     s3.var          =  Ld_A           [s1.var!].var                           #
+
+
+    s3.var          =  MOV            [s1.var!].var                           #
+
+
+ GLOBOPT INSTR:     s2.var          =  Ld_A           [s3.var!+32].var                        #
+
+
+    s2.var          =  MOV            [s3.var!+32].var                        #
+
+
+ GLOBOPT INSTR:     s4.var          =  Ld_A           [s2.var+56].var                         #
+
+
+    s4.var          =  MOV            [s2.var+56].var                         #
+
+
+ GLOBOPT INSTR:     s5.u32          =  Ld_A           [s2.var!+64].u32                        #
+
+
+    s5.u32          =  MOV            [s2.var!+64].u32                        #
+
+
+ GLOBOPT INSTR:     s11.i32         =  ArgIn_A        prm1<24>.i32!                           #
+
+
+    s11.i32         =  MOV            prm1<24>.i32!                           #
+
+
+ GLOBOPT INSTR:     s24.u32         =  And_I4         s11.i32!, 4294967292 (0xFFFFFFFC).u32   #0003 
+
+
+    s24.u32         =  MOV            s11.i32!                                #
+    s24.u32         =  AND            s24.u32, 4294967292 (0xFFFFFFFC).u32    #0003 
+
+
+ GLOBOPT INSTR:     s15[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var!+s24.u32!].simd128, s5.u32! #0003 
+
+
+    s15[Simd128Float32x4].simd128 = MOVUPS  [s4[Float32Array].var!+s24.u32!].simd128 #
+
+
+ GLOBOPT INSTR:     s25.i32         =  Simd128_ExtractLane_I4  s15[Simd128Float32x4].simd128!, 0 (0x0).i32 #0017 
+
+
+    s25.i32         =  MOVD           s15[Simd128Float32x4].simd128           #
+
+
+ GLOBOPT INSTR:                        Ret            s25.i32!                                #002a 
+
+
+    s28(rax).i32    =  MOV            s25.i32!                                #
+                       Ret            s28(rax).i32                            #002a 
+
+
+ GLOBOPT INSTR:                        FunctionExit                                           #
+
+
+                       FunctionExit                                           #
+-----------------------------------------------------------------------------
+Function m128_load4[0] ( (#2.0), #8)              Instr Count:21		Size:61
+
+ 252B4770200           FunctionEntry  
+ 252B4770200   arg3(s32)<16>.i32 = MOV  (rdx).i32
+ 252B4770204   arg2(s31)<8>.i64 = MOV  (rcx).i64
+ 252B4770209           PrologStart    
+ 252B4770209           PUSH           (rbp).i64
+ 252B477020B   (rbp).i64 = MOV        (rsp).i64
+ 252B477020E   (rsp).i64 = SUB        (rsp).i64, 64 (0x40).i64
+ 252B4770212           PrologEnd      
+
+
+ GLOBOPT INSTR:     s1.var          =  LdAsmJsEnv                                             #
+
+
+ 252B4770212   s29(rax).u64 = MOV     s30<16>.u64
+ 252B4770216   s1(rax).var = MOV      [s29(rax).u64+88].u64
+
+
+ GLOBOPT INSTR:     s3.var          =  Ld_A           [s1.var!].var                           #
+
+
+ 252B477021A   s3(rax).var = MOV      [s1(rax).var!].var
+
+
+ GLOBOPT INSTR:     s2.var          =  Ld_A           [s3.var!+32].var                        #
+
+
+ 252B477021D   s2(rax).var = MOV      [s3(rax).var!+32].var
+
+
+ GLOBOPT INSTR:     s4.var          =  Ld_A           [s2.var+56].var                         #
+
+
+ 252B4770221   s4(rcx).var = MOV      [s2(rax).var+56].var
+
+
+ GLOBOPT INSTR:     s11.i32         =  ArgIn_A        prm1<24>.i32!                           #
+
+
+ 252B4770225   s11(rax).i32 = MOV     prm1<24>.i32!
+
+
+ GLOBOPT INSTR:     s24.u32         =  And_I4         s11.i32!, 4294967292 (0xFFFFFFFC).u32   #0003 
+
+
+ 252B4770228   s24(rax).u32 = AND     s24(rax).u32, 4294967292 (0xFFFFFFFC).u32
+
+
+ GLOBOPT INSTR:     s15[Simd128Float32x4].simd128 = Simd128_LdArr_F4  [s4[Float32Array].var!+s24.u32!].simd128, s5.u32! #0003 
+
+
+ 252B477022E   s15(xmm0)[Simd128Float32x4].simd128 = MOVUPS  [s4(rcx)[Float32Array].var!+s24(rax).u32!].simd128
+
+
+ GLOBOPT INSTR:     s25.i32         =  Simd128_ExtractLane_I4  s15[Simd128Float32x4].simd128!, 0 (0x0).i32 #0017 
+
+
+ 252B4770233   s25(rax).i32 = MOVD    s15(xmm0)[Simd128Float32x4].simd128
+
+
+ GLOBOPT INSTR:                        Ret            s25.i32!                                #002a 
+
+
+ 252B4770237   (rsp).i64 = MOV        (rbp).i64
+ 252B477023A   (rbp).i64 = POP        
+ 252B477023C           RET            0 (0x0).i32, (rax).i64
+
+
+ GLOBOPT INSTR:                        FunctionExit                                           #
+
+
+ 252B477023D           FunctionExit   
+EndBackEnd - function: m128_load4[0] ( (#2.0), #8, line 1), mode: FullJit time:33.140082 mSec (Asmjs)
