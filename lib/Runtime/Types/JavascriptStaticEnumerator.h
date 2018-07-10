@@ -21,13 +21,13 @@ namespace Js
     {
     protected:
         friend class ForInObjectEnumerator;
+    public:
         Field(DynamicObjectPropertyEnumerator) propertyEnumerator;
         Field(JavascriptEnumerator*) currentEnumerator;
         Field(JavascriptEnumerator*) prefixEnumerator;
         Field(JavascriptEnumerator*) arrayEnumerator;
 
         JavascriptString * MoveAndGetNextFromEnumerator(PropertyId& propertyId, PropertyAttributes* attributes);
-    public:
         JavascriptStaticEnumerator() { Clear(EnumeratorFlags::None, nullptr); }
         bool Initialize(JavascriptEnumerator * prefixEnumerator, ArrayObject * arrayToEnumerate, DynamicObject* objectToEnumerate, EnumeratorFlags flags, ScriptContext * requestContext, EnumeratorCache * enumeratorCache);
         bool IsNullEnumerator() const;
@@ -39,6 +39,8 @@ namespace Js
         void Reset();
         uint32 GetCurrentItemIndex();
         JavascriptString * MoveAndGetNext(PropertyId& propertyId, PropertyAttributes* attributes = nullptr);
+        bool JavascriptStaticEnumerator::IsPropertyEnumerator(PropertyId& propertyId, PropertyAttributes* attributes = nullptr);
+        DynamicObjectPropertyEnumerator * JavascriptStaticEnumerator::GetPropertyEnumerator();
 
         static uint32 GetOffsetOfCurrentEnumerator() { return offsetof(JavascriptStaticEnumerator, currentEnumerator); }
         static uint32 GetOffsetOfPrefixEnumerator() { return offsetof(JavascriptStaticEnumerator, prefixEnumerator); }

@@ -1663,16 +1663,49 @@ void JavascriptObject::CopyDataPropertiesForGenericObjects(RecyclableObject* fro
     Var propValue = nullptr;
     JavascriptString * propertyName = nullptr;
 
-    // Enumerate through each property of properties and fetch the property descriptor
-    while ((propertyName = enumerator.MoveAndGetNext(nextKey)) != NULL)
-    {
-        // Make sure nextKey is defined for the current propertyName
-        if (nextKey == Constants::NoProperty)
-        {
-            PropertyRecord const * propertyRecord = nullptr;
+    int enumeratedCount = 0;
+    int cachedCount = 0;
+    PropertyString** strings = nullptr;
+    bool trycache = false;
 
-            scriptContext->GetOrAddPropertyRecord(propertyName, &propertyRecord);
-            nextKey = propertyRecord->GetPropertyId();
+    // If It's propertyenumerator, try fast path.
+    if (assign && enumerator.IsPropertyEnumerator(nextKey)) 
+    {
+        DynamicObjectPropertyEnumerator * propertyEnumerator = enumerator.GetPropertyEnumerator();
+        if (propertyEnumerator->IsCachedCompleted())
+        {
+            cachedCount = propertyEnumerator->GetCacheCount();
+            strings = propertyEnumerator->GetCacheStrings();
+            trycache = true;
+        }
+    }
+
+    // Enumerate through each property of properties and fetch the property descriptor
+    while (true)
+    {
+        if (trycache) 
+        {
+            if (enumeratedCount == cachedCount)
+            {
+                propertyName = nullptr;
+                break;
+            }
+            propertyName = strings[enumeratedCount++];
+            nextKey = (PropertyString::TryFromVar(propertyName))->GetPropertyId();
+        }
+        else
+        {
+            propertyName = enumerator.MoveAndGetNext(nextKey);
+            if (propertyName == nullptr) break;
+
+            // Make sure nextKey is defined for the current propertyName
+            if (nextKey == Constants::NoProperty)
+            {
+                PropertyRecord const * propertyRecord = nullptr;
+
+                scriptContext->GetOrAddPropertyRecord(propertyName, &propertyRecord);
+                nextKey = propertyRecord->GetPropertyId();
+            }
         }
 
         bool found = false;

@@ -35,7 +35,7 @@ namespace Js
         DynamicType * GetTypeToEnumerate() const;
         JavascriptString * MoveAndGetNextWithCache(PropertyId& propertyId, PropertyAttributes* attributes);
         JavascriptString * MoveAndGetNextNoCache(PropertyId& propertyId, PropertyAttributes * attributes);
-
+    private:
         void Initialize(DynamicType * type, CachedData * data, Js::BigPropertyIndex initialPropertyCount);
         BigPropertyIndex PropertyIndexToPropertyEnumeration(BigPropertyIndex index) const { return object->GetTypeHandler()->PropertyIndexToPropertyEnumeration(index); }
     public:
@@ -52,6 +52,10 @@ namespace Js
         void Reset();
         void Clear(EnumeratorFlags flags, ScriptContext * requestContext);
         JavascriptString * MoveAndGetNext(PropertyId& propertyId, PropertyAttributes * attributes);
+        bool DynamicObjectPropertyEnumerator::HasCached();
+        int DynamicObjectPropertyEnumerator::GetCacheCount();
+        PropertyString ** DynamicObjectPropertyEnumerator::GetCacheStrings();
+        bool DynamicObjectPropertyEnumerator::IsCachedCompleted();
 
         bool CanUseJITFastPath() const;
         static uint32 GetOffsetOfScriptContext() { return offsetof(DynamicObjectPropertyEnumerator, scriptContext); }

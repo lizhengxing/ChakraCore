@@ -189,8 +189,8 @@ namespace Js
 
             this->objectIndex = cachedData->indexes[enumeratedCount];
             propertyAttributes = cachedData->attributes[enumeratedCount];
-
             enumeratedCount++;
+//            printf("DynamicObjectPropertyEnumerator::MoveAndGetNextWithCache: hit cache \n");
         }
         else if (!cachedData->completed)
         {
@@ -206,6 +206,7 @@ namespace Js
                     cachedData->indexes[enumeratedCount] = this->objectIndex;
                     cachedData->attributes[enumeratedCount] = propertyAttributes;
                     cachedData->cachedCount = ++enumeratedCount;
+//                    printf("DynamicObjectPropertyEnumerator::MoveAndGetNextWithCache: put into cache \n");
                 }
             }
             else
@@ -279,5 +280,28 @@ namespace Js
             return MoveAndGetNextNoCache(propertyId, attributes);
         }
         return nullptr;
+    }
+
+    bool DynamicObjectPropertyEnumerator::HasCached()
+    {
+        if (this->cachedData && this->initialType == this->object->GetDynamicType())
+            return true;
+        
+        return false;
+    }
+
+    int DynamicObjectPropertyEnumerator::GetCacheCount()
+    {
+        return this->cachedData->cachedCount;
+    }
+
+    PropertyString ** DynamicObjectPropertyEnumerator::GetCacheStrings()
+    {
+        return this->cachedData->strings;
+    }
+
+    bool DynamicObjectPropertyEnumerator::IsCachedCompleted()
+    {
+        return this->cachedData->completed;
     }
 }

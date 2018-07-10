@@ -90,4 +90,18 @@ namespace Js
         Assert(!currentIndex || !CrossSite::NeedMarshalVar(currentIndex, this->propertyEnumerator.GetScriptContext()));
         return currentIndex;
     }
+
+    bool JavascriptStaticEnumerator::IsPropertyEnumerator(PropertyId& propertyId, PropertyAttributes* attributes)
+    {
+     //   JavascriptString * currentIndex = MoveAndGetNextFromEnumerator(propertyId, attributes);
+        if (this->currentEnumerator == nullptr)
+            return true;
+        
+        return false;
+    }
+
+    DynamicObjectPropertyEnumerator * JavascriptStaticEnumerator::GetPropertyEnumerator()
+    {
+        return &(this->propertyEnumerator);
+    }
 }
