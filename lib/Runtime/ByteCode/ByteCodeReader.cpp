@@ -72,6 +72,30 @@ namespace Js
         return nullptr;
     }
 
+    template<typename LayoutType>
+    const unaligned LayoutType * ByteCodeReader::GetLayout(const byte*& ip, int offset)
+    {
+        size_t layoutSize = sizeof(LayoutType);
+
+        AssertMsg((layoutSize > 0) && (layoutSize < 100), "Ensure valid layout size");
+
+        const byte * layoutData = ip+offset;
+        ip += layoutSize+offset;
+        m_currentLocation = ip;
+
+        Assert(m_currentLocation <= m_endLocation);
+
+        return reinterpret_cast<const unaligned LayoutType *>(layoutData);
+    }
+
+    template<>
+    const unaligned OpLayoutEmpty * ByteCodeReader::GetLayout<OpLayoutEmpty>(const byte*& ip, int offset)
+    {
+        ip += offset;
+        m_currentLocation = ip;
+        return nullptr;
+    }
+
     OpCode ByteCodeReader::ReadOp(const byte *&ip, LayoutSize& layoutSize) const
     {
         // Return current location and advance past data.
@@ -148,6 +172,11 @@ namespace Js
         return (OpCode)*ip++;
     }
 
+    OpCode ByteCodeReader::LookByteOp(const byte*& ip)
+    {
+        return (OpCode)*ip;
+    }
+
     OpCode ByteCodeReader::PeekByteOp(const byte * ip)
     {
         return ReadByteOp(ip);
@@ -157,6 +186,12 @@ namespace Js
     {
         uint16*& extIp = (uint16*&)ip;
         return (OpCode)*extIp++;
+    }
+
+    OpCode ByteCodeReader::LookExtOp(const byte*& ip)
+    {
+        uint16*& extIp = (uint16*&)ip;
+        return (OpCode)*extIp;
     }
 
     OpCode ByteCodeReader::PeekExtOp(const byte * ip)
@@ -186,6 +221,10 @@ namespace Js
     const unaligned OpLayout##layout * ByteCodeReader::layout(const byte*& ip) \
     { \
         return GetLayout<OpLayout##layout>(ip); \
+    } \
+    const unaligned OpLayout##layout * ByteCodeReader::layout(const byte*& ip, int offset) \
+    { \
+        return GetLayout<OpLayout##layout>(ip, offset); \
     }
 #include "LayoutTypes.h"
     // Define reading functions
@@ -197,6 +236,10 @@ namespace Js
     const unaligned OpLayout##layout * ByteCodeReader::layout(const byte*& ip) \
     { \
         return GetLayout<OpLayout##layout>(ip); \
+    } \
+    const unaligned OpLayout##layout * ByteCodeReader::layout(const byte*& ip, int offset) \
+    { \
+        return GetLayout<OpLayout##layout>(ip, offset); \
     }
 #define EXCLUDE_DUP_LAYOUT
 #include "LayoutTypesAsmJs.h"
@@ -205,6 +248,8 @@ namespace Js
     {
         Assert(m_currentLocation >= m_startLocation);
         Assert(m_currentLocation - m_startLocation <= UINT_MAX);
+//        printf("GetCurrentOffset: m_currentLocation is 0x%x -- m_startLocation is 0x%x \n", static_cast<int>(m_currentLocation), static_cast<int>(m_startLocation));
+ //       printf("GetCurrentOffset: offset is 0x%x \n", (uint)(m_currentLocation - m_startLocation));
         return (uint)(m_currentLocation - m_startLocation);
     }
 

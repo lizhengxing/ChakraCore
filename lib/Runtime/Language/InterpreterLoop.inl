@@ -20,8 +20,13 @@
 #define READ_OP ReadOp_WPreviousStmtTracking<INTERPRETER_OPCODE, ByteCodeReader::ReadByteOp, TRACING_FUNC>
 #define READ_EXT_OP ReadOp_WPreviousStmtTracking<INTERPRETER_OPCODE, ByteCodeReader::ReadExtOp, TRACING_FUNC>
 #else
+#ifndef INTERPRETER_ASMJS
+#define READ_OP ReadOp<INTERPRETER_OPCODE, ByteCodeReader::LookByteOp, TRACING_FUNC>
+#define READ_EXT_OP ReadOp<INTERPRETER_OPCODE, ByteCodeReader::LookExtOp, TRACING_FUNC>
+#else
 #define READ_OP ReadOp<INTERPRETER_OPCODE, ByteCodeReader::ReadByteOp, TRACING_FUNC>
 #define READ_EXT_OP ReadOp<INTERPRETER_OPCODE, ByteCodeReader::ReadExtOp, TRACING_FUNC>
+#endif
 #endif
 
 #ifdef PROVIDE_DEBUGGING
@@ -44,14 +49,30 @@
 
 const byte* Js::InterpreterStackFrame::PROCESS_OPCODE_FN_NAME(ExtendedOpcodePrefix)(const byte* ip)
 {
+#ifndef INTERPRETER_ASMJS
+    ip++;
+#endif
     INTERPRETER_OPCODE op = READ_EXT_OP(ip);
+#ifndef INTERPRETER_ASMJS
+//    Output::Print(_u("opcode(ExtendedOpcodePrefix) is: %s --\n"), Js::OpCodeUtil::GetOpCodeName(op));
+#endif
+    //printf("opcode(ExtendedOpcodePrefix) is: %s --\n", Js::OpCodeUtil::GetOpCodeName(op));
     switch (op)
     {
+#ifndef INTERPRETER_ASMJS
+#define EXDEF2(x, op, func) PROCESS_##x(op, func, 2)
+#define EXDEF3(x, op, func, y) PROCESS_##x(op, func, y, 2)
+#define EXDEF2_WMS(x, op, func) PROCESS_##x##_COMMON(op, func, _Small, 2)
+#define EXDEF3_WMS(x, op, func, y) PROCESS_##x##_COMMON(op, func, y, _Small, 2)
+#define EXDEF4_WMS(x, op, func, y, t) PROCESS_##x##_COMMON(op, func, y, _Small, t, 2)
+#else
 #define EXDEF2(x, op, func) PROCESS_##x(op, func)
 #define EXDEF3(x, op, func, y) PROCESS_##x(op, func, y)
 #define EXDEF2_WMS(x, op, func) PROCESS_##x##_COMMON(op, func, _Small)
 #define EXDEF3_WMS(x, op, func, y) PROCESS_##x##_COMMON(op, func, y, _Small)
 #define EXDEF4_WMS(x, op, func, y, t) PROCESS_##x##_COMMON(op, func, y, _Small, t)
+#endif
+
 #include "InterpreterHandler.inl"
     default:
         // Help the C++ optimizer by declaring that the cases we
@@ -64,19 +85,31 @@ const byte* Js::InterpreterStackFrame::PROCESS_OPCODE_FN_NAME(ExtendedOpcodePref
 
 const byte* Js::InterpreterStackFrame::PROCESS_OPCODE_FN_NAME(MediumLayoutPrefix)(const byte* ip, Var& yieldValue)
 {
+#ifndef INTERPRETER_ASMJS
+    ip++;
+#endif
     INTERPRETER_OPCODE op = READ_OP(ip);
+#ifndef INTERPRETER_ASMJS
+ //   Output::Print(_u("opcode(MediumLayoutPrefix) is: %s --\n"), Js::OpCodeUtil::GetOpCodeName(op));
+#endif
     switch (op)
     {
 #ifndef INTERPRETER_ASMJS
     case INTERPRETER_OPCODE::Yield:
-        m_reader.Reg2_Medium(ip);
+        m_reader.Reg2_Medium(ip, 1);
         yieldValue = GetReg(GetFunctionBody()->GetYieldRegister());
         break;
 #endif
-
+#ifndef INTERPRETER_ASMJS
+#define DEF2_WMS(x, op, func) PROCESS_##x##_COMMON(op, func, _Medium, 1)
+#define DEF3_WMS(x, op, func, y) PROCESS_##x##_COMMON(op, func, y, _Medium, 1)
+#define DEF4_WMS(x, op, func, y, t) PROCESS_##x##_COMMON(op, func, y, _Medium, t, 1)
+#else
 #define DEF2_WMS(x, op, func) PROCESS_##x##_COMMON(op, func, _Medium)
 #define DEF3_WMS(x, op, func, y) PROCESS_##x##_COMMON(op, func, y, _Medium)
 #define DEF4_WMS(x, op, func, y, t) PROCESS_##x##_COMMON(op, func, y, _Medium, t)
+#endif
+
 #include "InterpreterHandler.inl"
     default:
         // Help the C++ optimizer by declaring that the cases we
@@ -89,12 +122,25 @@ const byte* Js::InterpreterStackFrame::PROCESS_OPCODE_FN_NAME(MediumLayoutPrefix
 
 const byte* Js::InterpreterStackFrame::PROCESS_OPCODE_FN_NAME(ExtendedMediumLayoutPrefix)(const byte* ip)
 {
+#ifndef INTERPRETER_ASMJS
+    ip++;
+#endif
     INTERPRETER_OPCODE op = READ_EXT_OP(ip);
+#ifndef INTERPRETER_ASMJS
+ //   Output::Print(_u("opcode(ExtendedMediumLayoutPrefix) is: %s --\n"), Js::OpCodeUtil::GetOpCodeName(op));
+#endif
     switch (op)
     {
+#ifndef INTERPRETER_ASMJS
+#define EXDEF2_WMS(x, op, func) PROCESS_##x##_COMMON(op, func, _Medium, 2)
+#define EXDEF3_WMS(x, op, func, y) PROCESS_##x##_COMMON(op, func, y, _Medium, 2)
+#define EXDEF4_WMS(x, op, func, y, t) PROCESS_##x##_COMMON(op, func, y, _Medium, t, 2)
+#else
 #define EXDEF2_WMS(x, op, func) PROCESS_##x##_COMMON(op, func, _Medium)
 #define EXDEF3_WMS(x, op, func, y) PROCESS_##x##_COMMON(op, func, y, _Medium)
 #define EXDEF4_WMS(x, op, func, y, t) PROCESS_##x##_COMMON(op, func, y, _Medium, t)
+#endif
+
 #include "InterpreterHandler.inl"
     default:
         // Help the C++ optimizer by declaring that the cases we
@@ -107,19 +153,31 @@ const byte* Js::InterpreterStackFrame::PROCESS_OPCODE_FN_NAME(ExtendedMediumLayo
 
 const byte* Js::InterpreterStackFrame::PROCESS_OPCODE_FN_NAME(LargeLayoutPrefix)(const byte* ip, Var& yieldValue)
 {
+#ifndef INTERPRETER_ASMJS
+    ip++;
+#endif
     INTERPRETER_OPCODE op = READ_OP(ip);
+#ifndef INTERPRETER_ASMJS
+//    Output::Print(_u("opcode(LargeLayoutPrefix) is: %s --\n"), Js::OpCodeUtil::GetOpCodeName(op));
+#endif
     switch (op)
     {
 #ifndef INTERPRETER_ASMJS
     case INTERPRETER_OPCODE::Yield:
-        m_reader.Reg2_Large(ip);
+        m_reader.Reg2_Large(ip, 1);
         yieldValue = GetReg(GetFunctionBody()->GetYieldRegister());
         break;
 #endif
-
+#ifndef INTERPRETER_ASMJS
+#define DEF2_WMS(x, op, func) PROCESS_##x##_COMMON(op, func, _Large, 1)
+#define DEF3_WMS(x, op, func, y) PROCESS_##x##_COMMON(op, func, y, _Large, 1)
+#define DEF4_WMS(x, op, func, y, t) PROCESS_##x##_COMMON(op, func, y, _Large, t, 1)
+#else
 #define DEF2_WMS(x, op, func) PROCESS_##x##_COMMON(op, func, _Large)
 #define DEF3_WMS(x, op, func, y) PROCESS_##x##_COMMON(op, func, y, _Large)
 #define DEF4_WMS(x, op, func, y, t) PROCESS_##x##_COMMON(op, func, y, _Large, t)
+#endif
+
 #include "InterpreterHandler.inl"
     default:
         // Help the C++ optimizer by declaring that the cases we
@@ -132,12 +190,25 @@ const byte* Js::InterpreterStackFrame::PROCESS_OPCODE_FN_NAME(LargeLayoutPrefix)
 
 const byte* Js::InterpreterStackFrame::PROCESS_OPCODE_FN_NAME(ExtendedLargeLayoutPrefix)(const byte* ip)
 {
+#ifndef INTERPRETER_ASMJS
+    ip++;
+#endif
     INTERPRETER_OPCODE op = READ_EXT_OP(ip);
+#ifndef INTERPRETER_ASMJS
+//    Output::Print(_u("opcode(ExtendedLargeLayoutPrefix) is: %s --\n"), Js::OpCodeUtil::GetOpCodeName(op));
+#endif
     switch (op)
     {
+#ifndef INTERPRETER_ASMJS
+#define EXDEF2_WMS(x, op, func) PROCESS_##x##_COMMON(op, func, _Large, 2)
+#define EXDEF3_WMS(x, op, func, y) PROCESS_##x##_COMMON(op, func, y, _Large, 2)
+#define EXDEF4_WMS(x, op, func, y, t) PROCESS_##x##_COMMON(op, func, y, _Large, t, 2)
+#else
 #define EXDEF2_WMS(x, op, func) PROCESS_##x##_COMMON(op, func, _Large)
 #define EXDEF3_WMS(x, op, func, y) PROCESS_##x##_COMMON(op, func, y, _Large)
 #define EXDEF4_WMS(x, op, func, y, t) PROCESS_##x##_COMMON(op, func, y, _Large, t)
+#endif
+
 #include "InterpreterHandler.inl"
     default:
         // Help the C++ optimizer by declaring that the cases we
@@ -186,7 +257,17 @@ Js::Var Js::InterpreterStackFrame::INTERPRETERLOOPNAME()
     while (true)
     {
         INTERPRETER_OPCODE op = READ_OP(ip);
-
+#ifndef INTERPRETER_ASMJS
+ //       Output::Print(_u("opcode is: %s --\n"), Js::OpCodeUtil::GetOpCodeName(op));
+#if 0
+        if (op == INTERPRETER_OPCODE::Ret)
+            printf("Meets Ret op -n");
+        if (op == INTERPRETER_OPCODE::StInnerSlot)
+            printf("Meets StInnerSlot op -n");
+        if (op == INTERPRETER_OPCODE::Nop)
+            printf("Meets Nop op -n");
+#endif
+#endif
 #ifndef INTERPRETER_ASMJS
 #if ENABLE_TTD
         //In case where we don't have a BP set at the final statemnt
@@ -299,6 +380,9 @@ SWAP_BP_FOR_OPCODE:
                 // - If R0 has not explicitly been set, it will contain whatever garbage value
                 //   was last set.
                 //
+#ifndef INTERPRETER_ASMJS
+                    ip++;
+#endif
                 this->retOffset = m_reader.GetCurrentOffset();
                 m_reader.Empty(ip);
                 return GetReg((RegSlot)0);
@@ -307,16 +391,23 @@ SWAP_BP_FOR_OPCODE:
 #ifndef INTERPRETER_ASMJS
         case INTERPRETER_OPCODE::Yield:
             {
-                m_reader.Reg2_Small(ip);
+                m_reader.Reg2_Small(ip, 1);
                 return GetReg(GetFunctionBody()->GetYieldRegister());
             }
 #endif
-
+#ifndef INTERPRETER_ASMJS
+#define DEF2(x, op, func) PROCESS_##x(op, func, 1)
+#define DEF3(x, op, func, y) PROCESS_##x(op, func, y, 1)
+#define DEF2_WMS(x, op, func) PROCESS_##x##_COMMON(op, func, _Small, 1)
+#define DEF3_WMS(x, op, func, y) PROCESS_##x##_COMMON(op, func, y, _Small, 1)
+#define DEF4_WMS(x, op, func, y, t) PROCESS_##x##_COMMON(op, func, y, _Small, t, 1)
+#else
 #define DEF2(x, op, func) PROCESS_##x(op, func)
 #define DEF3(x, op, func, y) PROCESS_##x(op, func, y)
 #define DEF2_WMS(x, op, func) PROCESS_##x##_COMMON(op, func, _Small)
 #define DEF3_WMS(x, op, func, y) PROCESS_##x##_COMMON(op, func, y, _Small)
 #define DEF4_WMS(x, op, func, y, t) PROCESS_##x##_COMMON(op, func, y, _Small, t)
+#endif
 
 #include "InterpreterHandler.inl"
 
@@ -325,18 +416,20 @@ SWAP_BP_FOR_OPCODE:
                 // Return the continuation address to the helper.
                 // This tells the helper that control left the scope without completing the try/handler,
                 // which is particularly significant when executing a finally.
+                ip++;
                 m_reader.Empty(ip);
                 return (Var)this->m_reader.GetCurrentOffset();
             case INTERPRETER_OPCODE::LeaveNull:
                 // Return to the helper without specifying a continuation address,
                 // indicating that the handler completed without jumping, so exception processing
                 // should continue.
+                ip++;
                 m_reader.Empty(ip);
                 return nullptr;
 #endif
 
 #if ENABLE_PROFILE_INFO && !defined(INTERPRETER_ASMJS)
-// Aborting the current interpreter loop to switch the profile mode
+                // Aborting the current interpreter loop to switch the profile mode
 #define CHECK_SWITCH_PROFILE_MODE() if (switchProfileMode) return nullptr;
 #else
 #define CHECK_SWITCH_PROFILE_MODE()
@@ -360,6 +453,9 @@ SWAP_BP_FOR_OPCODE:
             case INTERPRETER_OPCODE::MediumLayoutPrefix:
             {
                 Var yieldValue = nullptr;
+#ifndef INTERPRETER_ASMJS
+//                ip++;
+#endif
                 ip = PROCESS_OPCODE_FN_NAME(MediumLayoutPrefix)(ip, yieldValue);
                 CHECK_YIELD_VALUE();
                 CHECK_SWITCH_PROFILE_MODE();
@@ -369,6 +465,9 @@ SWAP_BP_FOR_OPCODE:
             case INTERPRETER_OPCODE::LargeLayoutPrefix:
             {
                 Var yieldValue = nullptr;
+#ifndef INTERPRETER_ASMJS
+ //               ip++;
+#endif
                 ip = PROCESS_OPCODE_FN_NAME(LargeLayoutPrefix)(ip, yieldValue);
                 CHECK_YIELD_VALUE();
                 CHECK_SWITCH_PROFILE_MODE();
@@ -379,9 +478,12 @@ SWAP_BP_FOR_OPCODE:
             {
                 // Note that at this time though ip was advanced by 'OpCode op = ReadByteOp<INTERPRETER_OPCODE>(ip)',
                 // we haven't advanced m_reader.m_currentLocation yet, thus m_reader.m_currentLocation still points to EndOfBLock,
-                // and that +1 will point to 1st byte past the buffer.
-                Assert(m_reader.GetCurrentOffset() + sizeof(byte) == m_functionBody->GetByteCode()->GetLength());
+                // and that +1 will point to 1st byte past the buffer.++
+#ifndef INTERPRETER_ASMJS
+                ip++;
+#endif
 
+                Assert(m_reader.GetCurrentOffset() + sizeof(byte) == m_functionBody->GetByteCode()->GetLength());
                 //
                 // Reached an "OpCode::EndOfBlock" so need to exit this interpreter loop because
                 // there is no more byte-code to execute.
@@ -403,6 +505,7 @@ SWAP_BP_FOR_OPCODE:
 #ifndef INTERPRETER_ASMJS
             case INTERPRETER_OPCODE::Break:
             {
+                ip++;
 #if DEBUGGING_LOOP
                 // The reader has already advanced the IP:
                 if (this->m_functionBody->ProbeAtOffset(m_reader.GetCurrentOffset(), &op))

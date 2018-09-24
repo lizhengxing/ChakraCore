@@ -25,6 +25,12 @@ namespace Js {
 
     uint const MaxOpCodeSize = 2;
 
+    enum OpCodeSize
+    {
+        OpSize = 1,
+        ExdSize
+    };
+
     enum LayoutSize
     {
         SmallLayout,

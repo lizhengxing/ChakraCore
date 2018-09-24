@@ -37,7 +37,7 @@ namespace Js
 
         template<typename LayoutType> inline const unaligned LayoutType * GetLayout();
         template<typename LayoutType> inline const unaligned LayoutType * GetLayout(const byte*& ip);
-
+        template<typename LayoutType> inline const unaligned LayoutType * GetLayout(const byte*& ip, int offset);
         // Read*Op advance the IP,
         // Peek*Op doesn't move the IP
         // *ByteOp only read one byte of the opcode,
@@ -55,19 +55,23 @@ namespace Js
 
         static OpCode PeekByteOp(const byte*  ip);
         static OpCode ReadByteOp(const byte*& ip);
+        static OpCode LookByteOp(const byte*& ip);
         static OpCode PeekExtOp(const byte*  ip);
         static OpCode ReadExtOp(const byte*& ip);
+        static OpCode LookExtOp(const byte*& ip);
 
         // Declare reading functions
 #define LAYOUT_TYPE(layout) \
         const unaligned OpLayout##layout* layout(); \
-        const unaligned OpLayout##layout* layout(const byte*& ip);
+        const unaligned OpLayout##layout* layout(const byte*& ip); \
+        const unaligned OpLayout##layout* layout(const byte*& ip, int offset);
 #include "LayoutTypes.h"
 
 #ifdef ASMJS_PLAT
 #define LAYOUT_TYPE(layout) \
         const unaligned OpLayout##layout* layout(); \
-        const unaligned OpLayout##layout* layout(const byte*& ip);
+        const unaligned OpLayout##layout* layout(const byte*& ip); \
+        const unaligned OpLayout##layout* layout(const byte*& ip, int offset);
 #define EXCLUDE_DUP_LAYOUT
 #include "LayoutTypesAsmJs.h"
 #endif

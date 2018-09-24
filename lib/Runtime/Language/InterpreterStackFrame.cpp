@@ -38,7 +38,951 @@
 /// preventing the main 'switch' statement from using the OpCode to become a
 /// direct local-function jump.
 ///----------------------------------------------------------------------------
+#ifndef INTERPRETER_ASMJS
+#define PROCESS_FALLTHROUGH(name, func, offset) \
+    case OpCode::name:
+#define PROCESS_FALLTHROUGH_COMMON(name, func, suffix, offset) \
+    case OpCode::name:
 
+#define PROCESS_READ_LAYOUT(name, layout, suffix, offset) \
+    CompileAssert(OpCodeInfo<OpCode::name>::Layout == OpLayoutType::layout); \
+    const unaligned OpLayout##layout##suffix * playout = m_reader.layout##suffix(ip, offset); \
+    Assert((playout != nullptr) == (Js::OpLayoutType::##layout != Js::OpLayoutType::Empty)); // Make sure playout is used
+
+#define PROCESS_NOP_COMMON(name, layout, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, layout, suffix, offset); \
+        break; \
+    }
+
+#define PROCESS_NOP(name, layout, offset) PROCESS_NOP_COMMON(name, layout, ,offset)
+
+#define PROCESS_CUSTOM_COMMON(name, func, layout, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, layout, suffix, offset); \
+        func(playout); \
+        break; \
+    }
+
+#define PROCESS_CUSTOM(name, func, layout, offset) PROCESS_CUSTOM_COMMON(name, func, layout, ,offset)
+
+#define PROCESS_CUSTOM_L_COMMON(name, func, layout, regslot, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, layout, suffix, offset); \
+        func(playout); \
+        break; \
+    }
+
+#define PROCESS_CUSTOM_L(name, func, layout, regslot, offset) PROCESS_CUSTOM_L_COMMON(name, func, layout, regslot, ,offset)
+
+#define PROCESS_CUSTOM_L_Arg_COMMON(name, func, suffix, offset) PROCESS_CUSTOM_L_COMMON(name, func, Arg, Arg, suffix, offset)
+#define PROCESS_CUSTOM_L_Arg2_COMMON(name, func, layout, suffix, offset) PROCESS_CUSTOM_L_COMMON(name, func, layout, Arg, suffix, offset)
+#define PROCESS_CUSTOM_L_Arg(name, func, offset) PROCESS_CUSTOM_L_COMMON(name, func, Arg, Arg, ,offset)
+
+#define PROCESS_CUSTOM_ArgNoSrc_COMMON(name, func, suffix, offset) PROCESS_CUSTOM_COMMON(name, func, ArgNoSrc, suffix, offset)
+#define PROCESS_CUSTOM_ArgNoSrc(name, func, offset) PROCESS_CUSTOM_COMMON(name, func, ArgNoSrc, ,offset)
+
+#define PROCESS_CUSTOM_L_R0_COMMON(name, func, layout, suffix, offset) PROCESS_CUSTOM_L_COMMON(name, func, layout, R0, suffix, offset)
+#define PROCESS_CUSTOM_L_R0(name, func, layout, offset) PROCESS_CUSTOM_L_COMMON(name, func, layout, R0, ,offset)
+
+#define PROCESS_CUSTOM_L_Value_COMMON(name, func, layout, suffix, offset) PROCESS_CUSTOM_L_COMMON(name, func, layout, Value, suffix, offset)
+#define PROCESS_CUSTOM_L_Value(name, func, layout, offset) PROCESS_CUSTOM_L_COMMON(name, func, layout, Value, ,offset)
+
+#define PROCESS_TRY(name, func, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Br, ,offset); \
+        func(playout); \
+        ip = m_reader.GetIP(); \
+        break; \
+    }
+
+#define PROCESS_EMPTY(name, func, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Empty, ,offset); \
+        func(); \
+        ip = m_reader.GetIP(); \
+        break; \
+    }
+
+#define PROCESS_TRYBR2_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, BrReg2, suffix, offset); \
+        func((const byte*)(playout + 1), playout->RelativeJumpOffset, playout->R1, playout->R2); \
+        ip = m_reader.GetIP(); \
+        break; \
+    }
+
+#define PROCESS_CALL_COMMON(name, func, layout, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, layout, suffix, offset); \
+        func(playout); \
+        break; \
+    }
+
+#define PROCESS_CALL(name, func, layout, offset) PROCESS_CALL_COMMON(name, func, layout, offset)
+
+
+#define PROCESS_CALL_FLAGS_None_COMMON(name, func, layout, suffix, offset) PROCESS_CALL_COMMON(name, func, layout, suffix, offset)
+#define PROCESS_CALL_FLAGS_Value_COMMON(name, func, layout, suffix, offset) PROCESS_CALL_COMMON(name, func, layout, suffix, offset)
+
+
+#define PROCESS_A1toXX_ALLOW_STACK_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg1, suffix, offset); \
+        func(GetRegAllowStackVar(playout->R0)); \
+        break; \
+    }
+
+#define PROCESS_A1toXX_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg1, suffix, offset); \
+        func(GetReg(playout->R0)); \
+        break; \
+    }
+
+#define PROCESS_A1toXX(name, func, offset) PROCESS_A1toXX_COMMON(name, func, offset)
+
+#define PROCESS_A1toXXMem_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg1, suffix, offset); \
+        func(GetReg(playout->R0), GetScriptContext()); \
+        break; \
+    }
+
+#define PROCESS_A1toXXMem(name, func, offset) PROCESS_A1toXXMem_COMMON(name, func, offset)
+
+#define PROCESS_A1toXXMemNonVar_COMMON(name, func, type, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg1, suffix, offset); \
+        func((type)GetNonVarReg(playout->R0), GetScriptContext()); \
+        break; \
+    }
+
+#define PROCESS_A1toXXMemNonVar(name, func, type, offset) PROCESS_A1toXXMemNonVar_COMMON(name, func, type, offset)
+
+#define PROCESS_XXtoA1_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg1, suffix, offset); \
+        SetReg(playout->R0, \
+                func()); \
+        break; \
+    }
+
+#define PROCESS_XXtoA1(name, func, offset) PROCESS_XXtoA1_COMMON(name, func, offset)
+
+#define PROCESS_XXtoA1NonVar_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg1, suffix, offset); \
+        SetNonVarReg(playout->R0, \
+                func()); \
+        break; \
+    }
+
+#define PROCESS_XXtoA1NonVar(name, func, offset) PROCESS_XXtoA1NonVar_COMMON(name, func, offset)
+
+#define PROCESS_XXtoA1Mem_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg1, suffix, offset); \
+        SetReg(playout->R0, \
+                func(GetScriptContext())); \
+        break; \
+    }
+
+#define PROCESS_XXtoA1Mem(name, func, offset) PROCESS_XXtoA1Mem_COMMON(name, func, offset)
+
+#define PROCESS_A1toA1_ALLOW_STACK_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg2, suffix, offset); \
+        SetRegAllowStackVar(playout->R0, \
+                func(GetRegAllowStackVar(playout->R1))); \
+        break; \
+    }
+
+#define PROCESS_A1toA1_ALLOW_STACK(name, func, offset) PROCESS_A1toA1_ALLOW_STACK_COMMON(name, func, offset)
+
+#define PROCESS_A1toA1_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg2, suffix, offset); \
+        SetReg(playout->R0, \
+                func(GetReg(playout->R1))); \
+        break; \
+    }
+
+#define PROCESS_A1toA1(name, func, offset) PROCESS_A1toA1_COMMON(name, func, offset)
+
+
+#define PROCESS_A1toA1Profiled_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, ProfiledReg2, suffix, offset); \
+        SetReg(playout->R0, \
+                func(GetReg(playout->R1), playout->profileId)); \
+        break; \
+    }
+
+#define PROCESS_A1toA1Profiled(name, func, offset) PROCESS_A1toA1Profiled_COMMON(name, func, offset)
+
+#define PROCESS_A1toA1CallNoArg_COMMON(name, func, layout, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, layout, suffix, offset); \
+        SetReg(playout->R0, \
+                func(playout)); \
+        break; \
+    }
+
+#define PROCESS_A1toA1CallNoArg(name, func, layout, offset) PROCESS_A1toA1CallNoArg_COMMON(name, func, layout, offset)
+
+#define PROCESS_A1toA1Mem_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg2, suffix, offset); \
+        SetReg(playout->R0, \
+                func(GetReg(playout->R1),GetScriptContext())); \
+        break; \
+    }
+
+#define PROCESS_A1toA1Mem(name, func, offset) PROCESS_A1toA1Mem_COMMON(name, func, offset)
+
+#define PROCESS_A1toA1NonVar_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg2, suffix, offset); \
+        SetNonVarReg(playout->R0, \
+                func(GetNonVarReg(playout->R1))); \
+        break; \
+    }
+
+#define PROCESS_A1toA1NonVar(name, func, offset) PROCESS_A1toA1NonVar_COMMON(name, func, offset)
+
+#define PROCESS_A1toA1MemNonVar_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg2, suffix, offset); \
+        SetNonVarReg(playout->R0, \
+                func(GetNonVarReg(playout->R1),GetScriptContext())); \
+        break; \
+    }
+
+#define PROCESS_A1toA1MemNonVar(name, func, offset) PROCESS_A1toA1MemNonVar_COMMON(name, func, offset)
+
+#define PROCESS_SIZEtoA1MemNonVar_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg1Unsigned1, suffix, offset); \
+        SetNonVarReg(playout->R0, \
+                func(playout->C1, GetScriptContext())); \
+        break; \
+    }
+
+#define PROCESS_SIZEtoA1MemNonVar(name, func, offset) PROCESS_SIZEtoA1MemNonVar_COMMON(name, func, offset)
+
+#define PROCESS_INNERtoA1_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg1Unsigned1, suffix, offset); \
+        SetReg(playout->R0, InnerScopeFromIndex(playout->C1)); \
+        break; \
+    }
+
+#define PROCESS_INNERtoA1(name, fun, offset) PROCESS_INNERtoA1_COMMON(name, func, offset)
+
+#define PROCESS_U1toINNERMemNonVar_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Unsigned1, suffix, offset); \
+        SetInnerScopeFromIndex(playout->C1, func(GetScriptContext())); \
+        break; \
+    }
+
+#define PROCESS_U1toINNERMemNonVar(name, func, offset) PROCESS_U1toINNERMemNonVar_COMMON(name, func, offset)
+
+#define PROCESS_XXINNERtoA1MemNonVar_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg1Unsigned1, suffix, offset); \
+        SetNonVarReg(playout->R0, \
+                func(InnerScopeFromIndex(playout->C1), GetScriptContext())); \
+        break; \
+    }
+
+#define PROCESS_XXINNERtoA1MemNonVar(name, func, offset) PROCESS_XXINNERtoA1MemNonVar_COMMON(name, func, offset)
+
+#define PROCESS_A1INNERtoA1MemNonVar_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg2Int1, suffix, offset); \
+        SetNonVarReg(playout->R0, \
+                func(InnerScopeFromIndex(playout->C1), GetNonVarReg(playout->R1), GetScriptContext())); \
+        break; \
+    }
+
+#define PROCESS_A1LOCALtoA1MemNonVar(name, func, offset) PROCESS_A1LOCALtoA1MemNonVar_COMMON(name, func, offset)
+
+#define PROCESS_LOCALI1toA1_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg1Unsigned1, suffix, offset); \
+        SetReg(playout->R0, \
+                func(this->localClosure, playout->C1)); \
+        break; \
+    }
+
+#define PROCESS_LOCALI1toA1(name, func, offset) PROCESS_LOCALI1toA1_COMMON(name, func, offset)
+
+#define PROCESS_A1I1toA1_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg2Int1, suffix, offset); \
+        SetReg(playout->R0, \
+                func(GetReg(playout->R1), playout->C1)); \
+        break; \
+    }
+
+#define PROCESS_A1I1toA1(name, func, offset) PROCESS_A1I1toA1_COMMON(name, func, offset)
+
+#define PROCESS_A1I1toA1Mem_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg2Int1, suffix, offset); \
+        SetReg(playout->R0, \
+                func(GetReg(playout->R1), playout->C1, GetScriptContext())); \
+        break; \
+    }
+
+#define PROCESS_A1I1toA1Mem(name, func, offset) PROCESS_A1I1toA1Mem_COMMON(name, func, offset)
+
+#define PROCESS_RegextoA1_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg1Unsigned1, suffix, offset); \
+        SetReg(playout->R0, \
+                func(this->m_functionBody->GetLiteralRegex(playout->C1), GetScriptContext())); \
+        break; \
+    }
+
+#define PROCESS_RegextoA1(name, func, offset) PROCESS_RegextoA1_COMMON(name, func, offset)
+
+#define PROCESS_A2toXX_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg2, suffix, offset); \
+        func(GetReg(playout->R0), GetReg(playout->R1)); \
+        break; \
+    }
+
+#define PROCESS_A2toXX(name, func, offset) PROCESS_A2toXX_COMMON(name, func, offset)
+
+#define PROCESS_A2toXXMemNonVar_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg2, suffix, offset); \
+        func(GetNonVarReg(playout->R0), GetNonVarReg(playout->R1), GetScriptContext()); \
+        break; \
+    }
+
+#define PROCESS_A2toXXMemNonVar(name, func, offset) PROCESS_A2toXXMemNonVar_COMMON(name, func, offset)
+
+#define PROCESS_A2toXXMem_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg2, suffix, offset); \
+        func(GetReg(playout->R0), GetReg(playout->R1), GetScriptContext()); \
+        break; \
+    }
+
+#define PROCESS_A2A2NonVartoXXMem(name, func, offset) PROCESS_A2A2NonVartoXXMem_COMMON(name, func, offset)
+
+#define PROCESS_A2A2NonVartoXXMem_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg4, suffix, offset); \
+        func(GetReg(playout->R0), GetReg(playout->R1), GetNonVarReg(playout->R2), GetNonVarReg(playout->R3), GetScriptContext()); \
+        break; \
+    }
+
+#define PROCESS_A2toXXMem(name, func, offset) PROCESS_A2toXXMem_COMMON(name, func, offset)
+
+#define PROCESS_A1NonVarToA1_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg2, suffix, offset); \
+        SetReg(playout->R0, \
+            func(GetNonVarReg(playout->R1))); \
+        break; \
+    }
+
+
+#define PROCESS_A2NonVarToA1Reg_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg3, suffix, offset); \
+        SetReg(playout->R0, \
+            func(GetNonVarReg(playout->R1), playout->R2)); \
+        break; \
+    }
+
+#define PROCESS_A2toA1Mem_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg3, suffix, offset); \
+        SetReg(playout->R0, \
+                func(GetReg(playout->R1), GetReg(playout->R2),GetScriptContext())); \
+        break; \
+    }
+
+#define PROCESS_A2toA1Mem(name, func, offset) PROCESS_A2toA1Mem_COMMON(name, func, offset)
+
+#define PROCESS_A2toA1MemProfiled_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, ProfiledReg3, suffix, offset); \
+        SetReg(playout->R0, \
+        func(GetReg(playout->R1), GetReg(playout->R2),GetScriptContext(), playout->profileId)); \
+        break; \
+    }
+
+#define PROCESS_A2toA1MemProfiled(name, func, offset) PROCESS_A2toA1MemProfiled_COMMON(name, func, offset)
+
+#define PROCESS_A2toA1NonVar_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg3, suffix, offset); \
+        SetNonVarReg(playout->R0, \
+                func(GetNonVarReg(playout->R1), GetNonVarReg(playout->R2))); \
+        break; \
+    }
+
+#define PROCESS_A2toA1NonVar(name, func, offset) PROCESS_A2toA1NonVar_COMMON(name, func, offset)
+
+#define PROCESS_A2toA1MemNonVar_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg3, suffix, offset); \
+        SetNonVarReg(playout->R0, \
+                func(GetNonVarReg(playout->R1), GetNonVarReg(playout->R2),GetScriptContext())); \
+        break; \
+    }
+
+#define PROCESS_A2toA1MemNonVar(name, func, offset) PROCESS_A2toA1MemNonVar_COMMON(name, func, offset)
+
+#define PROCESS_CMMem_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg3, suffix, offset); \
+        SetReg(playout->R0, \
+            func(GetReg(playout->R1), GetReg(playout->R2), GetScriptContext()) ? JavascriptBoolean::OP_LdTrue(GetScriptContext()) : \
+                    JavascriptBoolean::OP_LdFalse(GetScriptContext())); \
+        break; \
+    }
+
+#define PROCESS_CMMem(name, func, offset) PROCESS_CMMem_COMMON(name, func, offset)
+
+#define PROCESS_ELEM_RtU_to_XX_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, ElementRootU, suffix, offset); \
+        func(playout->PropertyIdIndex); \
+        break; \
+    }
+
+#define PROCESS_ELEM_RtU_to_XX(name, func, offset) PROCESS_ELEM_RtU_to_XX_COMMON(name, func, offset)
+
+#define PROCESS_ELEM_C2_to_XX_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, ElementScopedC, suffix, offset); \
+        func(GetEnvForEvalCode(), playout->PropertyIdIndex, GetReg(playout->Value)); \
+        break; \
+    }
+
+#define PROCESS_ELEM_C2_to_XX(name, func, offset) PROCESS_ELEM_C2_to_XX_COMMON(name, func, offset)
+
+#define PROCESS_GET_ELEM_SLOT_FB_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, ElementSlot, suffix, offset); \
+        SetReg(playout->Value, \
+                func((FrameDisplay*)GetNonVarReg(playout->Instance), this->m_functionBody->GetNestedFuncReference(playout->SlotIndex))); \
+        break; \
+    }
+
+#define PROCESS_GET_ELEM_SLOT_FB(name, func, offset) PROCESS_GET_ELEM_SLOT_FB_COMMON(name, func, offset)
+
+#define PROCESS_GET_ELEM_SLOT_FB_HMO_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, ElementSlotI3, suffix, offset); \
+        SetReg(playout->Value, \
+                func((FrameDisplay*)GetNonVarReg(playout->Instance), this->m_functionBody->GetNestedFuncReference(playout->SlotIndex), GetReg(playout->HomeObj))); \
+        break; \
+    }
+
+#define PROCESS_GET_ELEM_SLOT_FB_HMO(name, func, offset) PROCESS_GET_ELEM_SLOT_FB_HMO_COMMON(name, func, offset)
+
+#define PROCESS_GET_SLOT_FB_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, ElementSlotI1, suffix, offset); \
+        SetReg(playout->Value, \
+               func(this->GetFrameDisplayForNestedFunc(), this->m_functionBody->GetNestedFuncReference(playout->SlotIndex))); \
+        break; \
+    }
+
+#define PROCESS_GET_SLOT_FB(name, func, offset) PROCESS_GET_SLOT_FB_COMMON(name, func, offset)
+
+#define PROCESS_GET_SLOT_FB_HMO_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, ElementSlot, suffix, offset); \
+        SetReg(playout->Value, \
+               func(this->GetFrameDisplayForNestedFunc(), this->m_functionBody->GetNestedFuncReference(playout->SlotIndex), GetReg(playout->Instance))); \
+        break; \
+    }
+
+#define PROCESS_GET_SLOT_FB_HMO(name, func, offset) PROCESS_GET_SLOT_FB_HMO_COMMON(name, func, offset)
+
+#define PROCESS_GET_ELEM_IMem_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, ElementI, suffix, offset); \
+        SetReg(playout->Value, \
+                func(GetReg(playout->Instance), GetReg(playout->Element), GetScriptContext())); \
+        break; \
+    }
+
+#define PROCESS_GET_ELEM_IMem(name, func, offset) PROCESS_GET_ELEM_IMem_COMMON(name, func, offset)
+
+#define PROCESS_GET_ELEM_IMem_Strict_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, ElementI, suffix, offset); \
+        SetReg(playout->Value, \
+                func(GetReg(playout->Instance), GetReg(playout->Element), GetScriptContext(), PropertyOperation_StrictMode)); \
+        break; \
+    }
+
+#define PROCESS_GET_ELEM_IMem_Strict(name, func, offset) PROCESS_GET_ELEM_IMem_Strict_COMMON(name, func, offset)
+
+#define PROCESS_BR(name, func, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Br, ,offset); \
+        ip = func(playout); \
+        break; \
+    }
+
+#ifdef BYTECODE_BRANCH_ISLAND
+#define PROCESS_BRLONG(name, func, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, BrLong, ,offset); \
+        ip = func(playout); \
+        break; \
+    }
+#endif
+
+#define PROCESS_BRS(name,func, offset)  \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, BrS, ,offset); \
+        if (func(playout->val,GetScriptContext())) \
+        { \
+            ip = m_reader.SetCurrentRelativeOffset(ip, playout->RelativeJumpOffset); \
+        } \
+        break; \
+    }
+
+#define PROCESS_BRB_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, BrReg1, suffix, offset); \
+        if (func(GetReg(playout->R1))) \
+        { \
+            ip = m_reader.SetCurrentRelativeOffset(ip, playout->RelativeJumpOffset); \
+        } \
+        break; \
+    }
+
+#define PROCESS_BRB(name, func, offset) PROCESS_BRB_COMMON(name, func, ,offset)
+
+#define PROCESS_BRB_ALLOW_STACK_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, BrReg1, suffix, offset); \
+        if (func(GetRegAllowStackVar(playout->R1))) \
+        { \
+            ip = m_reader.SetCurrentRelativeOffset(ip, playout->RelativeJumpOffset); \
+        } \
+        break; \
+    }
+
+#define PROCESS_BRB_ALLOW_STACK(name, func, offset) PROCESS_BRB_ALLOW_STACK_COMMON(name, func, ,offset)
+
+#define PROCESS_BRBS_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, BrReg1, suffix, offset); \
+        if (func(GetReg(playout->R1), GetScriptContext())) \
+        { \
+            ip = m_reader.SetCurrentRelativeOffset(ip, playout->RelativeJumpOffset); \
+        } \
+        break; \
+    }
+
+#define PROCESS_BRBS(name, func, offset) PROCESS_BRBS_COMMON(name, func, ,offset)
+
+#define PROCESS_BRBReturnP1toA1_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, BrReg1Unsigned1, suffix, offset); \
+        SetReg(playout->R1, func(GetForInEnumerator(playout->C2))); \
+        if (!GetReg(playout->R1)) \
+        { \
+            ip = m_reader.SetCurrentRelativeOffset(ip, playout->RelativeJumpOffset); \
+        } \
+        break; \
+    }
+
+#define PROCESS_BRBReturnP1toA1(name, func, offset) PROCESS_BRBReturnP1toA1_COMMON(name, func, ,offset)
+
+#define PROCESS_BRBMem_ALLOW_STACK_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, BrReg1, suffix, offset); \
+        if (func(GetRegAllowStackVar(playout->R1),GetScriptContext())) \
+        { \
+            ip = m_reader.SetCurrentRelativeOffset(ip, playout->RelativeJumpOffset); \
+        } \
+        break; \
+    }
+#define PROCESS_BRBMem_ALLOW_STACK(name, func, offset) PROCESS_BRBMem_ALLOW_STACK_COMMON(name, func, ,offset)
+
+#define PROCESS_BRCMem_COMMON(name, func,suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, BrReg2, suffix, offset); \
+        if (func(GetReg(playout->R1), GetReg(playout->R2),GetScriptContext())) \
+        { \
+            ip = m_reader.SetCurrentRelativeOffset(ip, playout->RelativeJumpOffset); \
+        } \
+        break; \
+    }
+
+#define PROCESS_BRCMem(name, func, offset) PROCESS_BRCMem_COMMON(name, func, ,offset)
+
+#define PROCESS_BRPROP(name, func, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, BrProperty, ,offset); \
+        if (func(GetReg(playout->Instance), playout->PropertyIdIndex, GetScriptContext())) \
+        { \
+            ip = m_reader.SetCurrentRelativeOffset(ip, playout->RelativeJumpOffset); \
+        } \
+        break; \
+    }
+
+#define PROCESS_BRLOCALPROP(name, func, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, BrLocalProperty, ,offset); \
+        if (func(this->localClosure, playout->PropertyIdIndex, GetScriptContext())) \
+        { \
+            ip = m_reader.SetCurrentRelativeOffset(ip, playout->RelativeJumpOffset); \
+        } \
+        break; \
+    }
+
+#define PROCESS_BRENVPROP(name, func, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, BrEnvProperty, ,offset); \
+        if (func(LdEnv(), playout->SlotIndex, playout->PropertyIdIndex, GetScriptContext())) \
+        { \
+            ip = m_reader.SetCurrentRelativeOffset(ip, playout->RelativeJumpOffset); \
+        } \
+        break; \
+    }
+
+#define PROCESS_W1(name, func, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, W1, ,offset); \
+        func(playout->C1, GetScriptContext()); \
+        break; \
+    }
+
+#define PROCESS_U1toA1_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg1Unsigned1, suffix, offset); \
+        SetReg(playout->R0, \
+                func(playout->C1,GetScriptContext())); \
+        break; \
+    }
+#define PROCESS_U1toA1(name, func, offset) PROCESS_U1toA1_COMMON(name, func, ,offset)
+
+#define PROCESS_U1toA1NonVar_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg1Unsigned1, suffix, offset); \
+        SetNonVarReg(playout->R0, \
+                func(playout->C1)); \
+        break; \
+    }
+#define PROCESS_U1toA1NonVar(name, func, offset) PROCESS_U1toA1NonVar_COMMON(name, func, ,offset)
+
+#define PROCESS_U1toA1NonVar_FuncBody_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg1Unsigned1, suffix, offset); \
+        SetNonVarReg(playout->R0, \
+                func(playout->C1,GetScriptContext(), this->m_functionBody)); \
+        break; \
+    }
+#define PROCESS_U1toA1NonVar_FuncBody(name, func, offset) PROCESS_U1toA1NonVar_FuncBody_COMMON(name, func, ,offset)
+
+#define PROCESS_A1I2toXXNonVar_FuncBody(name, func, offset) PROCESS_A1I2toXXNonVar_FuncBody_COMMON(name, func, ,offset)
+
+#define PROCESS_A1I2toXXNonVar_FuncBody_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg3, suffix, offset); \
+        func(playout->R0, playout->R1, playout->R2, GetScriptContext(), this->m_functionBody); \
+        break; \
+    }
+
+#define PROCESS_A1U1toXX_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg1Unsigned1, suffix, offset); \
+        func(GetReg(playout->R0), playout->C1); \
+        break; \
+    }
+
+#define PROCESS_A1U1toXX(name, func, offset) PROCESS_A1U1toXX_COMMON(name, func, ,offset)
+
+#define PROCESS_A1U1toXXWithCache_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, ProfiledReg1Unsigned1, suffix, offset); \
+        func(GetReg(playout->R0), playout->C1, playout->profileId); \
+        break; \
+    }
+
+#define PROCESS_A1U1toXXWithCache(name, func, offset) PROCESS_A1U1toXXWithCache_COMMON(name, func, ,offset)
+
+#define PROCESS_EnvU1toXX_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Unsigned1, suffix, offset); \
+        func(LdEnv(), playout->C1); \
+        break; \
+    }
+
+#define PROCESS_EnvU1toXX(name, func, offset) PROCESS_EnvU1toXX_COMMON(name, func, ,offset)
+
+#define PROCESS_GET_ELEM_SLOTNonVar_COMMON(name, func, layout, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, layout, suffix, offset); \
+        SetNonVarReg(playout->Value, func(GetNonVarReg(playout->Instance), playout)); \
+        break; \
+    }
+
+#define PROCESS_GET_ELEM_SLOTNonVar(name, func, layout, offset) PROCESS_GET_ELEM_SLOTNonVar_COMMON(name, func, layout, ,offset)
+
+#define PROCESS_GET_ELEM_LOCALSLOTNonVar_COMMON(name, func, layout, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, layout, suffix, offset); \
+        SetNonVarReg(playout->Value, func((Var*)GetLocalClosure(), playout)); \
+        break; \
+    }
+
+#define PROCESS_GET_ELEM_LOCALSLOTNonVar(name, func, layout, offset) PROCESS_GET_ELEM_LOCALSLOTNonVar_COMMON(name, func, layout, ,offset)
+
+#define PROCESS_GET_ELEM_PARAMSLOTNonVar_COMMON(name, func, layout, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, layout, suffix, offset); \
+        SetNonVarReg(playout->Value, func((Var*)GetParamClosure(), playout)); \
+        break; \
+    }
+
+#define PROCESS_GET_ELEM_PARAMSLOTNonVar(name, func, layout, offset) PROCESS_GET_ELEM_PARAMSLOTNonVar_COMMON(name, func, layout, ,offset)
+
+#define PROCESS_GET_ELEM_INNERSLOTNonVar_COMMON(name, func, layout, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, layout, suffix, offset); \
+        SetNonVarReg(playout->Value, func(InnerScopeFromIndex(playout->SlotIndex1), playout)); \
+        break; \
+    }
+
+#define PROCESS_GET_ELEM_INNERSLOTNonVar(name, func, layout, offset) PROCESS_GET_ELEM_INNERSLOTNonVar_COMMON(name, func, layout, ,offset)
+
+#define PROCESS_GET_ELEM_ENVSLOTNonVar_COMMON(name, func, layout, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, layout, suffix, offset); \
+        SetNonVarReg(playout->Value, func(LdEnv(), playout)); \
+        break; \
+    }
+
+#define PROCESS_GET_ELEM_ENVSLOTNonVar(name, func, layout, offset) PROCESS_GET_ELEM_ENVSLOTNonVar_COMMON(name, func, layout, ,offset)
+
+#define PROCESS_SET_ELEM_SLOTNonVar_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, ElementSlot, suffix, offset); \
+        func(GetNonVarReg(playout->Instance), playout->SlotIndex, GetRegAllowStackVarEnableOnly(playout->Value)); \
+        break; \
+    }
+
+#define PROCESS_SET_ELEM_SLOTNonVar(name, func, offset) PROCESS_SET_ELEM_SLOTNonVar_COMMON(name, func, ,offset)
+
+#define PROCESS_SET_ELEM_SLOTMem_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, ElementSlot, suffix, offset); \
+        func(GetNonVarReg(playout->Instance), playout->SlotIndex, GetReg(playout->Value), GetScriptContext()); \
+        break; \
+    }
+
+#define PROCESS_SET_ELEM_SLOTMem(name, func, offset) PROCESS_SET_ELEM_SLOTMem_COMMON(name, func, ,offset)
+
+#define PROCESS_SET_ELEM_LOCALSLOTNonVar_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, ElementSlotI1, suffix, offset); \
+        func((Var*)GetLocalClosure(), playout->SlotIndex, GetRegAllowStackVarEnableOnly(playout->Value)); \
+        break; \
+    }
+
+#define PROCESS_SET_ELEM_LOCALSLOTNonVar(name, func, offset) PROCESS_SET_ELEM_LOCALSLOTNonVar_COMMON(name, func, ,offset)
+
+#define PROCESS_SET_ELEM_PARAMSLOTNonVar_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, ElementSlotI1, suffix, offset); \
+        func((Var*)GetParamClosure(), playout->SlotIndex, GetRegAllowStackVarEnableOnly(playout->Value)); \
+        break; \
+    }
+
+#define PROCESS_SET_ELEM_PARAMSLOTNonVar(name, func, offset) PROCESS_SET_ELEM_PARAMSLOTNonVar_COMMON(name, func, ,offset); \
+
+#define PROCESS_SET_ELEM_INNERSLOTNonVar_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, ElementSlotI2, suffix, offset); \
+        func(InnerScopeFromIndex(playout->SlotIndex1), playout->SlotIndex2, GetRegAllowStackVarEnableOnly(playout->Value)); \
+        break; \
+    }
+
+#define PROCESS_SET_ELEM_INNERSLOTNonVar(name, func, offset) PROCESS_SET_ELEM_INNERSLOTNonVar_COMMON(name, func, ,offset)
+
+#define PROCESS_SET_ELEM_ENVSLOTNonVar_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, ElementSlotI2, suffix, offset); \
+        func(LdEnv(), playout->SlotIndex1, playout->SlotIndex2, GetRegAllowStackVarEnableOnly(playout->Value)); \
+        break; \
+    }
+
+#define PROCESS_SET_ELEM_ENVSLOTNonVar(name, func, offset) PROCESS_SET_ELEM_ENVSLOTNonVar_COMMON(name, func, ,offset)
+
+/*---------------------------------------------------------------------------------------------- */
+#define PROCESS_A3toA1Mem_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg4, suffix, offset); \
+        SetReg(playout->R0, \
+                func(GetReg(playout->R1), GetReg(playout->R2), GetReg(playout->R3), GetScriptContext())); \
+        break; \
+    }
+
+#define PROCESS_A3toA1Mem(name, func, offset) PROCESS_A3toA1Mem_COMMON(name, func, ,offset)
+
+/*---------------------------------------------------------------------------------------------- */
+#define PROCESS_A2I1toA1Mem_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg3B1, suffix, offset); \
+        SetReg(playout->R0, \
+                func(GetReg(playout->R1), GetReg(playout->R2), playout->B3, GetScriptContext())); \
+        break; \
+    }
+
+#define PROCESS_A2I1toA1Mem(name, func, offset) PROCESS_A2I1toA1Mem_COMMON(name, func, ,offset)
+
+/*---------------------------------------------------------------------------------------------- */
+#define PROCESS_A2I1toXXMem_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg2B1, suffix, offset); \
+        func(GetReg(playout->R0), GetReg(playout->R1), playout->B2, scriptContext); \
+        break; \
+    }
+
+#define PROCESS_A2I1toXXMem(name, func, offset) PROCESS_A2I1toXXMem_COMMON(name, func, ,offset)
+
+/*---------------------------------------------------------------------------------------------- */
+#define PROCESS_A3I1toXXMem_COMMON(name, func, suffix, offset) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg3B1, suffix, offset); \
+        func(GetReg(playout->R0), GetReg(playout->R1), GetReg(playout->R2), playout->B3, scriptContext); \
+        break; \
+    }
+
+#define PROCESS_A3I1toXXMem(name, func, offset) PROCESS_A3I1toXXMem_COMMON(name, func, ,offset)
+
+#if ENABLE_PROFILE_INFO
+#define PROCESS_IP_TARG_IMPL(name, func, layoutSize, offset) \
+    case OpCode::name: \
+    { \
+        Assert(!switchProfileMode); \
+        ip+=offset; \
+        ip = func<layoutSize, INTERPRETERPROFILE>(ip); \
+        if(switchProfileMode) \
+        { \
+            m_reader.SetIP(ip); \
+            return nullptr; \
+        } \
+        break; \
+    }
+#else
+#define PROCESS_IP_TARG_IMPL(name, func, layoutSize) \
+    case OpCode::name: \
+    { \
+        ip = func<layoutSize, INTERPRETERPROFILE>(ip); \
+       break; \
+    }
+#endif
+
+#define PROCESS_IP_TARG_COMMON(name, func, suffix, offset) PROCESS_IP_TARG##suffix(name, func, offset)
+
+#define PROCESS_IP_TARG_Large(name, func, offset) PROCESS_IP_TARG_IMPL(name, func, Js::LargeLayout, offset)
+#define PROCESS_IP_TARG_Medium(name, func, offset) PROCESS_IP_TARG_IMPL(name, func, Js::MediumLayout, offset)
+#define PROCESS_IP_TARG_Small(name, func, offset) PROCESS_IP_TARG_IMPL(name, func, Js::SmallLayout, offset)
+#else
 #define PROCESS_FALLTHROUGH(name, func) \
     case OpCode::name:
 #define PROCESS_FALLTHROUGH_COMMON(name, func, suffix) \
@@ -982,6 +1926,7 @@
 #define PROCESS_IP_TARG_Large(name, func) PROCESS_IP_TARG_IMPL(name, func, Js::LargeLayout)
 #define PROCESS_IP_TARG_Medium(name, func) PROCESS_IP_TARG_IMPL(name, func, Js::MediumLayout)
 #define PROCESS_IP_TARG_Small(name, func) PROCESS_IP_TARG_IMPL(name, func, Js::SmallLayout)
+#endif
 
 #if ENABLE_TTD
 #if ENABLE_TTD_DIAGNOSTICS_TRACING
