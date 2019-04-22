@@ -243,6 +243,9 @@ namespace Js
     {
         Assert(scriptContext);
 
+        // zxli add for force -nonative.
+        return true;
+
         return
             !PHASE_OFF_OPTFUNC(DynamicProfilePhase, functionBody) &&
             (

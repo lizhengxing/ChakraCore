@@ -1314,7 +1314,7 @@ using namespace Js;
                 flags);
         }
 
-        functionBody->GetDynamicProfileInfo()->RecordFieldAccess(functionBody, inlineCacheIndex, nullptr, fldInfoFlags);
+        functionBody->GetDynamicProfileInfo()->RecordFieldAccess(functionBody, inlineCacheIndex, value, fldInfoFlags);
     }
 
     void ProfilingHelpers::ProfiledInitFld_Jit(
@@ -1388,7 +1388,7 @@ using namespace Js;
         fldInfoFlags = DynamicProfileInfo::MergeFldInfoFlags(fldInfoFlags, DynamicProfileInfo::FldInfoFlagsFromCacheType(operationInfo.cacheType));
         fldInfoFlags = DynamicProfileInfo::MergeFldInfoFlags(fldInfoFlags, DynamicProfileInfo::FldInfoFlagsFromSlotType(operationInfo.slotType));
 
-        functionBody->GetDynamicProfileInfo()->RecordFieldAccess(functionBody, inlineCacheIndex, nullptr, fldInfoFlags);
+        functionBody->GetDynamicProfileInfo()->RecordFieldAccess(functionBody, inlineCacheIndex, value, fldInfoFlags);
     }
 
     void ProfilingHelpers::UpdateFldInfoFlagsForGetSetInlineCandidate(

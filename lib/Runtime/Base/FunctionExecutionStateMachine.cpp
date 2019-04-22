@@ -219,11 +219,14 @@ namespace Js
             VerifyExecutionMode(ExecutionMode::Interpreter);
             return ExecutionState::Interpreter;
         }
+        // Let profilingInterpreter mode is default.
+        /*
         else if (owner->DoInterpreterAutoProfile())
         {
             VerifyExecutionMode(ExecutionMode::AutoProfilingInterpreter);
             return ExecutionState::AutoProfilingInterpreter0;
         }
+        */
         else
         {
             VerifyExecutionMode(ExecutionMode::ProfilingInterpreter);
